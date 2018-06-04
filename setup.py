@@ -29,7 +29,7 @@ CLASSIFIERS = [
     'Topic :: Scientific/Engineering :: Bio-Informatics'
 ]
 INSTALL_REQUIRES = [
-    'pybel',
+    'pybel>=0.11.3',
     'ndex2',
 ]
 

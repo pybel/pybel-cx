@@ -1,27 +1,21 @@
 sudo: false
 cache: pip
 language: python
-
 python:
-    - 3.6
-
+  - 3.6
 matrix:
-    include:
-        - env: TOXENV=py
-        - env: TOXENV=docs
-        - env: TOXENV=manifest
-        - env: TOXENV=rst-lint
-        - env: TOXENV=flake8
-
+  include:
+    - env: TOXENV=py
+    - env: TOXENV=docs
+    - env: TOXENV=manifest
+    - env: TOXENV=rst-lint
+    - env: TOXENV=flake8
 install:
-    - pip install codecov coverage tox
-
+  - pip install codecov coverage tox
 script:
-    - tox
-
+  - tox
 after_success:
-    - tox -e coverage-report
-    - codecov
-
+  - tox -e coverage-report
+  - codecov
 notifications:
   slack: pybel:n2KbWKBum3musnBg3L76gGwq

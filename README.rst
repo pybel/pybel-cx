@@ -1,2 +1,3 @@
-# pybel-cx
+PyBEL-CX
+========
 A PyBEL extension for interconversion with CX

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""Setup.py for PyBEL-CX."""
+"""Setup for PyBEL-CX."""
 
 import codecs  # To use a consistent encoding
 import os
 import re
-import sys
 
 import setuptools
 

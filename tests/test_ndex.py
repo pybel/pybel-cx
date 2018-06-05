@@ -6,7 +6,8 @@ import os
 import time
 import unittest
 
-from pybel_cx.ndex_utils import NDEX_PASSWORD, NDEX_USERNAME, from_ndex, to_ndex
+from pybel_cx import from_ndex, to_ndex
+from pybel_cx.ndex_utils import NDEX_PASSWORD, NDEX_USERNAME
 from tests.cases import TestCase
 from tests.examples import example_graph
 
@@ -20,11 +21,12 @@ class TestInterchange(TestCase):
     def help_test_ndex(self, graph):
         """Test sending and receiving a graph with NDEx.
 
-        This test sleeps in the middle so NDEx can process."""
+        This test sleeps in the middle so NDEx can process.
+        """
         network_id = to_ndex(graph)
         time.sleep(10)
         reconstituted = from_ndex(network_id)
-        self.assertGraphEqual(graph, reconstituted)
+        self.assert_graph_equal(graph, reconstituted)
 
     @unittest.skipUnless(_has_ndex_cred, 'Need NDEx credentials')
     def test_example_ndex(self):

@@ -19,7 +19,7 @@ class TestSchema1(TestCase):
         :param pybel.BELGraph graph:
         """
         reconstituted = from_cx(to_cx(graph))
-        self.assertGraphEqual(graph, reconstituted)
+        self.assert_graph_equal(graph, reconstituted)
 
     def test_sialic_acid_graph(self):
         """Test the round trip in the sialic acid graph."""

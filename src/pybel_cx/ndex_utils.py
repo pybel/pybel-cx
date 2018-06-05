@@ -13,8 +13,10 @@ variables: ``NDEX_USERNAME`` and ``NDEX_PASSWORD``.
 import logging
 import os
 
+from ndex2.client import Ndex2
 from requests.compat import urlsplit
 
+from .constants import NDEX_PASSWORD, NDEX_USERNAME
 from .cx import from_cx, to_cx
 
 __all__ = [
@@ -24,26 +26,19 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-#: The name of the environment variable to search or the NDEx username
-NDEX_USERNAME = 'NDEX_USERNAME'
-
-#: The name of the environment variable to search or the NDEx password
-NDEX_PASSWORD = 'NDEX_PASSWORD'
-
 
 def build_ndex_client(username=None, password=None, debug=False):
-    """Builds a NDEx client by checking environmental variables.
+    """Build an NDEx client by checking environmental variables.
 
     It has been requested that the :code:`ndex-client` has this functionality built-in by this GitHub 
     `issue <https://github.com/ndexbio/ndex-python/issues/9>`_
 
-    :param str username: NDEx username
-    :param str password: NDEx password
+    :param Optional[str] username: NDEx username
+    :param Optional[str] password: NDEx password
     :param bool debug: If true, turn on NDEx client debugging
     :return: An NDEx client
-    :rtype: Ndex
+    :rtype: ndex2.client.Ndex2
     """
-    from ndex2.client import Ndex2 as Ndex
 
     if username is None and NDEX_USERNAME in os.environ:
         username = os.environ[NDEX_USERNAME]
@@ -53,15 +48,17 @@ def build_ndex_client(username=None, password=None, debug=False):
         password = os.environ[NDEX_PASSWORD]
         log.info('got NDEx password from environment')
 
-    return Ndex(username=username, password=password, debug=debug)
+    return Ndex2(username=username, password=password, debug=debug)
 
 
 def cx_to_ndex(cx, username=None, password=None, debug=False):
-    """Uploads a CX document to NDEx. Not necessarily specific to PyBEL.
+    """Upload a CX document to NDEx.
+
+    This function is not necessarily specific to PyBEL.
 
     :param list cx: A CX JSON dictionary
-    :param str username: NDEx username
-    :param str password: NDEx password
+    :param Optional[str] username: NDEx username
+    :param Optional[str] password: NDEx password
     :param bool debug: If true, turn on NDEx client debugging
     :return: The UUID assigned to the network by NDEx
     :rtype: str
@@ -76,11 +73,11 @@ def cx_to_ndex(cx, username=None, password=None, debug=False):
 
 
 def to_ndex(graph, username=None, password=None, debug=False):
-    """Uploads a BEL graph to NDEx
+    """Upload a BEL graph to NDEx.
 
-    :param BELGraph graph: A BEL graph
-    :param str username: NDEx username
-    :param str password: NDEx password
+    :param pybel.BELGraph graph: A BEL graph
+    :param Optional[str] username: NDEx username
+    :param Optional[str] password: NDEx password
     :param bool debug: If true, turn on NDEx client debugging
     :return: The UUID assigned to the network by NDEx
     :rtype: str
@@ -96,16 +93,15 @@ def to_ndex(graph, username=None, password=None, debug=False):
 
 
 def from_ndex(network_id, username=None, password=None, debug=False):
-    """Downloads a BEL Graph from NDEx
+    """Download a BEL Graph from NDEx.
 
     .. warning:: This function only will work for CX documents that have been originally exported from PyBEL
 
     :param str network_id: The UUID assigned to the network by NDEx
-    :param str username: NDEx username
-    :param str password: NDEx password
+    :param Optional[str] username: NDEx username
+    :param Optional[str] password: NDEx password
     :param bool debug: If true, turn on NDEx client debugging
-    :return: A BEL graph
-    :rtype: BELGraph
+    :rtype: pybel.BELGraph
 
     Example Usage:
 

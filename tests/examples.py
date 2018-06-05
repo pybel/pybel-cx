@@ -81,7 +81,8 @@ example_graph.add_increases(ras_family, mapk1, e1, c1, subject_modifier=gtp_acti
 example_graph.add_increases(ptk2, ptk2_rgb2_sos1, e1, c1, subject_modifier=kinase_activity)
 example_graph.add_increases(ptk2, mapk1, e1, c1, subject_modifier=kinase_activity, object_modifier=kinase_activity)
 example_graph.add_increases(ptk2, mapk3, e1, c1, subject_modifier=kinase_activity, object_modifier=kinase_activity)
-example_graph.add_increases(ptk2, pi3k_complex, e1, c1, subject_modifier=kinase_activity, object_modifier=kinase_activity)
+example_graph.add_increases(ptk2, pi3k_complex, e1, c1, subject_modifier=kinase_activity,
+                            object_modifier=kinase_activity)
 
 """
 SET Evidence=" two common MTHFR polymorphisms, namely 677C>T (Ala222Val) and 1298A>C (Glu429Ala), are known to reduce MTHFR activity. \
@@ -156,4 +157,5 @@ kng1_to_kallidin = reaction(reactants=[kng1], products=[kallidin])
 
 example_graph.add_increases(inflammatory_process, kng1_to_kallidin, c4, e4)
 example_graph.add_increases(kallidin, bdkrb1, c4, e4, object_modifier=catalytic_activity)
-example_graph.add_increases(bdkrb1, pla2_family, c4, e4, subject_modifier=catalytic_activity, object_modifier=catalytic_activity)
+example_graph.add_increases(bdkrb1, pla2_family, c4, e4, subject_modifier=catalytic_activity,
+                            object_modifier=catalytic_activity)

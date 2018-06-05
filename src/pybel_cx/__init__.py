@@ -45,8 +45,19 @@ BEL to CX
 
 """
 
-from .cx import *
-from .ndex_utils import *
+from .cx import from_cx, from_cx_file, from_cx_jsons, to_cx, to_cx_file, to_cx_jsons
+from .ndex_utils import from_ndex, to_ndex
+
+__all__ = [
+    'from_cx',
+    'from_cx_file',
+    'from_cx_jsons',
+    'to_cx',
+    'to_cx_file',
+    'to_cx_jsons',
+    'from_ndex',
+    'to_ndex',
+]
 
 __version__ = '0.1.0-dev'
 

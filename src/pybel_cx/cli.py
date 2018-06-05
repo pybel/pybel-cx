@@ -25,14 +25,14 @@ def cx_to_bel(file, output):
     """Convert a CX document from STDIN and write a BEL Script to STDOUT."""
     try:
         graph = from_cx_file(file)
-    except:
+    except Exception:
         log.exception('error occurred while loading CX.')
         sys.exit(1)
 
     try:
         for line in to_bel_lines(graph):
             click.echo(line, file=file)
-    except:
+    except Exception:
         log.exception('error occurred in conversion to BEL.')
         sys.exit(2)
 
@@ -47,13 +47,13 @@ def bel_to_cx(file, connection, output):
     """Convert a BEL Script from STDIN and write a CX document to STDOUT."""
     try:
         graph = from_lines(file, manager=connection)
-    except:
+    except Exception:
         log.exception('error occurred while loading BEL.')
         sys.exit(1)
 
     try:
         to_cx_file(graph, output)
-    except:
+    except Exception:
         log.exception('error occurred in conversion to CX.')
         sys.exit(2)
 

@@ -29,8 +29,6 @@ from pybel.constants import (
 )
 from pybel.utils import expand_dict, flatten_dict, hash_node
 
-CX_NODE_NAME = 'label'
-
 __all__ = [
     'to_cx',
     'to_cx_jsons',
@@ -43,11 +41,13 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+CX_NODE_NAME = 'label'
 NDEX_SOURCE_FORMAT = "ndex:sourceFormat"
 
 
 def _dict_to_cx(d, key_tag='k', value_tag='v'):
-    """
+    """Convert a dictionary to CX.
+
     :param dict d:
     :param str key_tag:
     :param str value_tag:
@@ -330,9 +330,9 @@ def to_cx(graph):
 
 
 def to_cx_file(graph, file, indent=2, **kwargs):
-    """Writes this graph to a JSON file in CX format
+    """Write a BEL graph to a JSON file in CX format.
 
-    :param BELGraph graph: A BEL graph
+    :param pybel.BELGraph graph: A BEL graph
     :param file file: A writable file or file-like
     :param Optional[int] indent: How many spaces to use to pretty print. Change to None for no pretty printing
 
@@ -349,9 +349,9 @@ def to_cx_file(graph, file, indent=2, **kwargs):
 
 
 def to_cx_jsons(graph, **kwargs):
-    """Dumps a BEL graph as CX JSON to a string
+    """Dump a BEL graph as CX JSON to a string.
     
-    :param BELGraph graph: A BEL Graph
+    :param pybel.BELGraph graph: A BEL Graph
     :return: CX JSON string
     :rtype: str
     """
@@ -370,10 +370,10 @@ def _iterate_list_of_dicts(lod):
 
 
 def from_cx(cx):
-    """Rebuilds a BELGraph from CX JSON output from PyBEL
+    """Rebuild a BELGraph from CX JSON output from PyBEL.
 
     :param list[dict] cx: The CX JSON for this graph
-    :rtype: BELGraph
+    :rtype: pybel.BELGraph
     """
     graph = BELGraph()
 
@@ -559,18 +559,18 @@ def from_cx(cx):
 
 
 def from_cx_jsons(graph_cx_json_str):
-    """Reconstitutes a BEL graph from a CX JSON string
+    """Reconstitute a BEL graph from a CX JSON string.
     
     :param str graph_cx_json_str: CX JSON string 
     :return: A BEL graph representing the CX graph contained in the string
-    :rtype: BELGraph
+    :rtype: pybel.BELGraph
     """
     graph_cx_json_dict = json.loads(graph_cx_json_str)
     return from_cx(graph_cx_json_dict)
 
 
 def from_cx_file(file):
-    """Reads a file containing CX JSON and converts to a BEL graph
+    """Read a file containing CX JSON and converts to a BEL graph.
 
     :param file file: A readable file or file-like containing the CX JSON for this graph
     :return: A BEL Graph representing the CX graph contained in the file

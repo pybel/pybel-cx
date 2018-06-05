@@ -16,7 +16,7 @@ __all__ = [
 
 
 def _edge_to_tuple(u, v, data):
-    """Converts an edge to tuple
+    """Convert an edge to tuple.
 
     :param tuple u: The source BEL node
     :param tuple v: The target BEL node
@@ -65,8 +65,8 @@ def _edge_to_tuple(u, v, data):
     )
 
 
-def hash_edge(u, v, data):
-    """Converts an edge tuple to a hash
+def _hash_edge(u, v, data):
+    """Convert an edge tuple to a hash.
 
     :param tuple u: The source BEL node
     :param tuple v: The target BEL node
@@ -74,26 +74,20 @@ def hash_edge(u, v, data):
     :return: A hashed version of the edge tuple using md5 hash of the binary pickle dump of u, v, and the json dump of d
     :rtype: str
     """
-    edge_tuple = _edge_to_tuple(u, v, data)
-    try:
-        rv = hash(edge_tuple)
-    except TypeError as e:
-        print(*edge_tuple, sep='\n')
-        raise e
-
-    return rv
+    return hash(_edge_to_tuple(u, v, data))
 
 
 def _get_edge_dict(graph):
     return {
-        hash_edge(u, v, data): (u, v, data)
+        _hash_edge(u, v, data): (u, v, data)
         for u, v, k, data in graph.edges(keys=True, data=True)
     }
 
 
 class TestCase(unittest.TestCase):
+    """Extension to base :class:`unittest.TestCase` with :class:`pybel.BELGraph` comparison."""
 
-    def assertGraphEqual(self, g1, g2):
+    def assert_graph_equal(self, g1, g2):
         """Assert two BEL graphs are the same.
 
         :param pybel.BELGraph g1:

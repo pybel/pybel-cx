@@ -76,10 +76,11 @@ def _cx_to_dict(list_of_dicts, key_tag='k', value_tag='v'):
 
 
 def calculate_canonical_cx_identifier(graph, node):
-    """Calculates the canonical name for a given node. If it is a simple node, uses the namespace:name combination.
-    Otherwise, it uses the BEL string.
+    """Calculate the canonical name for a given node.
 
-    :param BELGraph graph: A BEL Graph
+    If it is a simple node, uses the namespace:name combination. Otherwise, it uses the BEL string.
+
+    :param pybel.BELGraph graph: A BEL Graph
     :param tuple node: A node
     :return: Appropriate identifier for the node for CX indexing
     :rtype: str
@@ -99,9 +100,9 @@ def calculate_canonical_cx_identifier(graph, node):
 
 
 def build_node_mapping(graph):
-    """Builds a mapping from a graph's nodes to their canonical sort order
+    """Build a mapping from a graph's nodes to their canonical sort order.
     
-    :param BELGraph graph: A BEL graph 
+    :param pybel.BELGraph graph: A BEL graph
     :return: A mapping from a graph's nodes to their canonical sort order
     :rtype: dict[tuple,int]
     """
@@ -112,9 +113,9 @@ def build_node_mapping(graph):
 
 
 def to_cx(graph):
-    """Converts BEL Graph to CX data format (as in-memory JSON) for use with `NDEx <http://www.ndexbio.org/>`_
+    """Convert a BEL Graph to a CX JSON object for use with `NDEx <http://www.ndexbio.org/>`_.
 
-    :param BELGraph graph: A BEL Graph
+    :param pybel.BELGraph graph: A BEL Graph
     :return: The CX JSON for this graph
     :rtype: list
 
@@ -406,7 +407,6 @@ def from_cx(cx):
             node_attributes_aspect.extend(value)
 
         elif key == 'edges':
-            log.warning('got edge: %s', value)  # FIXME REMOVE
             edges_aspect.extend(value)
 
         elif key == 'edgeAttributes':
@@ -446,8 +446,13 @@ def from_cx(cx):
     for data in node_attributes_aspect:
         node_data[data['po']][data['n']] = data['v']
 
+    # put all normal data here
     node_data_pp = defaultdict(dict)
+
+    # Group all fusion-related data here
     node_data_fusion = defaultdict(dict)
+
+    # Group all variant-related data
     node_data_variants = defaultdict(lambda: defaultdict(dict))
 
     for nid, data in node_data.items():
@@ -463,24 +468,29 @@ def from_cx(cx):
                 node_data_pp[nid][key] = value
 
     for nid, data in node_data_fusion.items():
-        node_data_pp[nid][FUSION] = expand_dict(data)
+        node_data_pp[nid].update(expand_dict(data))
 
     for nid, data in node_data_variants.items():
-        node_data_pp[nid][VARIANTS] = [expand_dict(data[i]) for i in sorted(data)]
+        node_data_pp[nid][VARIANTS] = [
+            expand_dict(value)
+            for _, value in sorted(data.items())
+        ]
 
+    nid_node_tuple = {}
     for nid, data in node_data_pp.items():
         if CX_NODE_NAME in data:
             data[NAME] = data.pop(CX_NODE_NAME)
-        graph.add_node(nid, attr_dict=data)
+
+        nid_node_tuple[nid] = graph.add_node_from_data(data)
 
     edge_relation = {}
-    edge_source = {}
-    edge_target = {}
+    eid_source_nid = {}
+    eid_target_nid = {}
     for data in edges_aspect:
         eid = data['@id']
         edge_relation[eid] = data['i']
-        edge_source[eid] = data['s']
-        edge_target[eid] = data['t']
+        eid_source_nid[eid] = data['s']
+        eid_target_nid[eid] = data['t']
 
     edge_data = defaultdict(dict)
     for data in edge_annotations_aspect:
@@ -527,19 +537,19 @@ def from_cx(cx):
 
         if eid in edge_citation:
             graph.add_qualified_edge(
-                edge_source[eid],
-                edge_target[eid],
+                nid_node_tuple[eid_source_nid[eid]],
+                nid_node_tuple[eid_target_nid[eid]],
                 relation=edge_relation[eid],
                 citation=edge_data_pp[eid][CITATION],
                 evidence=edge_data_pp[eid][EVIDENCE],
                 subject_modifier=edge_data_pp[eid].get(SUBJECT),
                 object_modifier=edge_data_pp[eid].get(OBJECT),
-                annotations=edge_data_pp[eid].get(ANNOTATIONS)
+                annotations=edge_data_pp[eid].get(ANNOTATIONS),
             )
         elif edge_relation[eid] in unqualified_edges:
             graph.add_unqualified_edge(
-                edge_source[eid],
-                edge_target[eid],
+                nid_node_tuple[eid_source_nid[eid]],
+                nid_node_tuple[eid_target_nid[eid]],
                 edge_relation[eid]
             )
         else:

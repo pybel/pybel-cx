@@ -1,9 +1,9 @@
-PyBEL-CX
-========
+PyBEL-CX |build| |coverage| |documentation|
+===========================================
 A PyBEL extension for interconversion with CX
 
-Installation
-------------
+Installation |pypi_version| |python_versions| |pypi_license|
+------------------------------------------------------------
 Before this is deployed to PyPI, it can be installed with:
 
 .. code-block:: sh
@@ -40,3 +40,24 @@ connector, which is ``pymysql`` in this example.
    $ cat my_network.bel | bel_to_cx -c "mysql+pymysql://root:root@localhost/mydb?charset=utf8" > my_network.cx
 
 More documentation on connection strings at http://pybel.readthedocs.io/en/latest/manager.html#pybel.manager.BaseManager.from_connection.
+
+.. image:: https://travis-ci.com/pybel/pybel-cx.svg?branch=master
+    :target: https://travis-ci.com/pybel/pybel-cx
+    :alt: Build Status
+
+.. |coverage| image:: https://codecov.io/gh/pybel/pybel-cx/coverage.svg?branch=master
+    :target: https://codecov.io/gh/pybel/pybel-cx?branch=master
+    :alt: Coverage Status
+
+.. image:: http://readthedocs.org/projects/pybel-cx/badge/?version=latest
+    :target: https://pybel.readthedocs.io/projects/cx/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. |python_versions| image:: https://img.shields.io/pypi/pyversions/pybel-cx.svg
+    :alt: Stable Supported Python Versions
+
+.. |pypi_version| image:: https://img.shields.io/pypi/v/pybel-cx.svg
+    :alt: Current version on PyPI
+
+.. |pypi_license| image:: https://img.shields.io/pypi/l/pybel-cx.svg
+    :alt: MIT License

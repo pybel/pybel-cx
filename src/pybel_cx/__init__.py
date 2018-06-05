@@ -19,7 +19,14 @@ Here are some other specs for these scripts:
 
 Installation
 ------------
-Before this is deployed to PyPI, it can be installed with:
+PyBEL-CX can be installed easily from `PyPI <https://pypi.python.org/pypi/pybel-cx>`_ with the following code in
+your favorite terminal:
+
+.. code-block:: sh
+
+    $ python3 -m pip install pybel-cx
+
+or from the latest code on `GitHub <https://github.com/pybel/pybel-cx>`_ with:
 
 .. code-block:: sh
 

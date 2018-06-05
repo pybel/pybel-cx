@@ -31,6 +31,7 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = [
     'pybel>=0.11.3',
     'ndex2',
+    'requests',
 ]
 
 EXTRAS_REQUIRE = {}

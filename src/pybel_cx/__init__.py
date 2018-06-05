@@ -59,7 +59,7 @@ __all__ = [
     'to_ndex',
 ]
 
-__version__ = '0.1.0'
+__version__ = '0.1.1-dev'
 
 __title__ = 'pybel_cx'
 __description__ = 'A PyBEL extension for interconversion with CX'

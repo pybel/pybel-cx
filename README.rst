@@ -41,7 +41,7 @@ connector, which is ``pymysql`` in this example.
 
 More documentation on connection strings at http://pybel.readthedocs.io/en/latest/manager.html#pybel.manager.BaseManager.from_connection.
 
-.. image:: https://travis-ci.com/pybel/pybel-cx.svg?branch=master
+.. |build| image:: https://travis-ci.com/pybel/pybel-cx.svg?branch=master
     :target: https://travis-ci.com/pybel/pybel-cx
     :alt: Build Status
 
@@ -49,7 +49,7 @@ More documentation on connection strings at http://pybel.readthedocs.io/en/lates
     :target: https://codecov.io/gh/pybel/pybel-cx?branch=master
     :alt: Coverage Status
 
-.. image:: http://readthedocs.org/projects/pybel-cx/badge/?version=latest
+.. |documentation| image:: http://readthedocs.org/projects/pybel-cx/badge/?version=latest
     :target: https://pybel.readthedocs.io/projects/cx/en/latest/?badge=latest
     :alt: Documentation Status
 

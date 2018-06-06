@@ -53,6 +53,8 @@ example_graph = _BELGraph()
 example_graph.namespace_url['HGNC'] = ''
 example_graph.namespace_pattern['DBSNP'] = '^rs\d+$'
 example_graph.annotation_url['Species'] = ''
+example_graph.annotation_pattern['Number'] = '^\d+$'
+example_graph.annotation_list['Confidence'] = {'High', 'Low'}
 
 ptk2 = protein(namespace='HGNC', name='PTK2', variants=[pmod('Ph', 'Tyr', 925)])
 mapk1 = protein(namespace='HGNC', name='MAPK1')
@@ -140,7 +142,7 @@ ndufb6_gene = gene('HGNC', 'NDUFB6')
 ndufb6_rna = rna('HGNC', 'NDUFB6')
 
 example_graph.add_unqualified_edge(ndufb6_gene, rs629566, HAS_VARIANT)
-example_graph.add_negative_correlation(rs629566, ndufb6_rna, c3, e3)
+example_graph.add_negative_correlation(rs629566, ndufb6_rna, c3, e3, annotations={'Confidence': 'Low', 'Number': '50'})
 
 """
 SET Evidence = "% Entrez Gene summary: Rat: SUMMARY: precursor protein of kinin which is found in plasma; cysteine protease inhibitor and a major acute phase reactant [RGD] OMIM summary: (summary is not available from this source) kininogens; Endogenous peptides present in most body fluids. Certain enzymes convert them to active kinins which are involved in inflammation, blood clotting, complement reactions, etc. Kininogens belong to the cystatin superfamily. They are cysteine proteinase inhibitors. High-molecular-weight kininogen (hmwk) is split by plasma kallikrein to produce bradykinin. Low-molecular-weight kininogen (lmwk) is split by tissue kallikrein to produce kallidin. kinins; Inflammatory mediators that cause dilation of blood vessels and altered vascular permeability.  Kinins are small peptides produced from kininogen by kallikrein and are broken down by kininases. Act on phospholipase and increase arachidonic acid release and thus prostaglandin (PGE2) production. bradykinin; Vasoactive nonapeptide (RPPGFSPFR) formed by action of proteases on kininogens. Very similar to kallidin (which has the same sequence but with an additional N terminal lysine). Bradykinin is a very potent vasodilator and increases permeability of post capillary venules, it acts on endothelial cells to activate phospholipase A2. It is also spasmogenic for some smooth muscle and will cause pain. kallidin; Decapeptide (lysyl bradykinin, amino acid sequence KRPPGFSPFR) produced in kidney. Like bradykinin, an inflammatory mediator (a kinin), causes dilation of renal blood vessels and increased water excretion."
@@ -187,7 +189,8 @@ bcr_abl1_fus = protein_fusion(partner_5p=protein('HGNC', 'BCR'), partner_3p=prot
 crkl_ph = protein('HGNC', 'CRKL', variants=[pmod('Ph', 'Tyr')])
 gab2_ph = protein('HGNC', 'GAB2', variants=[pmod('Ph', 'Tyr')])
 
-example_graph.add_directly_increases(bcr_abl1_fus, crkl_ph, c5, e5, annotations={'Species': '9606'},
+example_graph.add_directly_increases(bcr_abl1_fus, crkl_ph, c5, e5,
+                                     annotations={'Species': '9606', 'Confidence': 'High'},
                                      subject_modifier=kinase_activity)
 example_graph.add_directly_increases(bcr_abl1_fus, gab2_ph, c5, e5, annotations={'Species': '9606'},
                                      subject_modifier=kinase_activity)

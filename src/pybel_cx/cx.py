@@ -476,8 +476,7 @@ def from_cx(cx):
 
     for nid, data in node_data_fusion.items():
         data = expand_dict(data)
-        if FUSION in data:
-            data[FUSION] = _restore_fusion_dict(data[FUSION])
+        data[FUSION] = _restore_fusion_dict(data[FUSION])
         node_data_pp[nid].update(data)
 
     for nid, data in node_data_variants.items():

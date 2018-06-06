@@ -22,10 +22,10 @@ from collections import defaultdict
 from pybel import BELGraph
 from pybel.canonicalize import node_to_bel
 from pybel.constants import (
-    ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION,
-    GRAPH_ANNOTATION_LIST, GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN,
-    GRAPH_NAMESPACE_URL, MEMBERS, NAME, NAMESPACE, OBJECT, PRODUCTS, REACTANTS, REACTION, RELATION, SUBJECT, VARIANTS,
-    unqualified_edges,
+    ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
+    GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
+    MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS, REACTION,
+    RELATION, SUBJECT, VARIANTS, unqualified_edges,
 )
 from pybel.utils import expand_dict, flatten_dict, hash_node
 
@@ -45,23 +45,6 @@ CX_NODE_NAME = 'label'
 NDEX_SOURCE_FORMAT = "ndex:sourceFormat"
 
 
-def _dict_to_cx(d, key_tag='k', value_tag='v'):
-    """Convert a dictionary to CX.
-
-    :param dict d:
-    :param str key_tag:
-    :param str value_tag:
-    :rtype: list[dict]
-    """
-    return [
-        {
-            key_tag: k,
-            value_tag: v
-        }
-        for k, v in d.items()
-    ]
-
-
 def _cx_to_dict(list_of_dicts, key_tag='k', value_tag='v'):
     """
     :param list[dict] list_of_dicts:
@@ -72,6 +55,29 @@ def _cx_to_dict(list_of_dicts, key_tag='k', value_tag='v'):
     return {
         d[key_tag]: d[value_tag]
         for d in list_of_dicts
+    }
+
+
+def _cleanse_fusion_dict(d):
+    """Fix the fusion partner names."""
+    return {
+        k.replace('_', ''): v
+        for k, v in d.items()
+    }
+
+
+_p_dict = {
+    'partner5p': PARTNER_5P,
+    'partner3p': PARTNER_3P,
+    'range5p': RANGE_5P,
+    'range3p': RANGE_3P
+}
+
+
+def _restore_fusion_dict(d):
+    return {
+        _p_dict[k]: v
+        for k, v in d.items()
     }
 
 
@@ -149,6 +155,7 @@ def to_cx(graph):
                             'v': b
                         })
             elif k == FUSION:
+                v = _cleanse_fusion_dict(v)
                 for a, b in flatten_dict(v).items():
                     node_attributes_entry.append({
                         'po': node_index,
@@ -468,7 +475,10 @@ def from_cx(cx):
                 node_data_pp[nid][key] = value
 
     for nid, data in node_data_fusion.items():
-        node_data_pp[nid].update(expand_dict(data))
+        data = expand_dict(data)
+        if FUSION in data:
+            data[FUSION] = _restore_fusion_dict(data[FUSION])
+        node_data_pp[nid].update(data)
 
     for nid, data in node_data_variants.items():
         node_data_pp[nid][VARIANTS] = [

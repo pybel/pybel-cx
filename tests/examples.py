@@ -4,43 +4,55 @@
 
 from pybel import BELGraph
 from pybel.constants import (
-    CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, DECREASES, HAS_VARIANT, INCREASES,
+    CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, DECREASES, DIRECTLY_INCREASES, HAS_VARIANT, INCREASES,
     NEGATIVE_CORRELATION, POSITIVE_CORRELATION,
 )
 from pybel.dsl import (
     abundance, activity, bioprocess, complex_abundance, gene, gmod, named_complex_abundance, pathology, pmod, protein,
-    protein_substitution, reaction, rna,
+    protein_fusion, protein_substitution, reaction, rna,
 )
 
 
 class _BELGraph(BELGraph):
-    def add_increases(self, u, v, citation, evidence, subject_modifier=None, object_modifier=None):
+    def add_increases(self, u, v, citation, evidence, *, annotations=None, subject_modifier=None, object_modifier=None):
         if not isinstance(evidence, str):
             raise TypeError
-        return self.add_qualified_edge(u, v, INCREASES, evidence, citation, subject_modifier, object_modifier)
+        return self.add_qualified_edge(u, v, INCREASES, evidence, citation, annotations=annotations,
+                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
 
-    def add_decreases(self, u, v, citation, evidence, subject_modifier=None, object_modifier=None):
+    def add_directly_increases(self, u, v, citation, evidence, *, annotations=None, subject_modifier=None,
+                               object_modifier=None):
         if not isinstance(evidence, str):
             raise TypeError
-        return self.add_qualified_edge(u, v, DECREASES, evidence, citation, subject_modifier, object_modifier)
+        return self.add_qualified_edge(u, v, DIRECTLY_INCREASES, evidence, citation, annotations=annotations,
+                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
 
-    def add_positive_correlation(self, u, v, evidence, citation, subject_modifier=None, object_modifier=None):
+    def add_decreases(self, u, v, citation, evidence, *, annotations=None, subject_modifier=None, object_modifier=None):
         if not isinstance(evidence, str):
             raise TypeError
-        return self.add_qualified_edge(u, v, POSITIVE_CORRELATION, evidence, citation, subject_modifier,
-                                       object_modifier)
+        return self.add_qualified_edge(u, v, DECREASES, evidence, citation, annotations=annotations,
+                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
 
-    def add_negative_correlation(self, u, v, evidence, citation, subject_modifier=None, object_modifier=None):
+    def add_positive_correlation(self, u, v, evidence, citation, *, annotations=None, subject_modifier=None,
+                                 object_modifier=None):
         if not isinstance(evidence, str):
             raise TypeError
-        return self.add_qualified_edge(u, v, NEGATIVE_CORRELATION, evidence, citation, subject_modifier,
-                                       object_modifier)
+        return self.add_qualified_edge(u, v, POSITIVE_CORRELATION, evidence, citation, annotations=annotations,
+                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
+
+    def add_negative_correlation(self, u, v, evidence, citation, *, annotations=None, subject_modifier=None,
+                                 object_modifier=None):
+        if not isinstance(evidence, str):
+            raise TypeError
+        return self.add_qualified_edge(u, v, NEGATIVE_CORRELATION, evidence, citation, annotations=annotations,
+                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
 
 
 example_graph = _BELGraph()
 
 example_graph.namespace_url['HGNC'] = ''
 example_graph.namespace_pattern['DBSNP'] = '^rs\d+$'
+example_graph.annotation_url['Species'] = ''
 
 ptk2 = protein(namespace='HGNC', name='PTK2', variants=[pmod('Ph', 'Tyr', 925)])
 mapk1 = protein(namespace='HGNC', name='MAPK1')
@@ -159,3 +171,23 @@ example_graph.add_increases(inflammatory_process, kng1_to_kallidin, c4, e4)
 example_graph.add_increases(kallidin, bdkrb1, c4, e4, object_modifier=catalytic_activity)
 example_graph.add_increases(bdkrb1, pla2_family, c4, e4, subject_modifier=catalytic_activity,
                             object_modifier=catalytic_activity)
+
+c5 = '10866298'
+e5 = 'We found that PD180970 inhibited in vivo tyrosine phosphorylation of p210Bcr-Abl (IC50 = 170 nM) and the p210BcrAbl substrates Gab2 and CrkL (IC50 = 80 nM) in human K562 chronic myelogenous leukemic cells. In vitro, PD180970 potently inhibited autophosphorylation of p210Bcr-Abl (IC50 = 5 nM) and the kinase activity of purified recombinant Abl tyrosine kinase (IC50 = 2.2 nM).'
+
+"""
+SET Species = 9606
+SET Citation = {"PubMed","Cancer Res 2000 Jun 15 60(12) 3127-31","10866298","","",""}
+
+kin(p(HGNC:BCR,fus(HGNC:ABL1))) directlyIncreases p(HGNC:CRKL,pmod(P,Y))
+kin(p(HGNC:BCR,fus(HGNC:ABL1))) directlyIncreases p(HGNC:GAB2,pmod(P,Y))
+"""
+
+bcr_abl1_fus = protein_fusion(partner_5p=protein('HGNC', 'BCR'), partner_3p=protein('HGNC', 'ABL1'))
+crkl_ph = protein('HGNC', 'CRKL', variants=[pmod('Ph', 'Tyr')])
+gab2_ph = protein('HGNC', 'GAB2', variants=[pmod('Ph', 'Tyr')])
+
+example_graph.add_directly_increases(bcr_abl1_fus, crkl_ph, c5, e5, annotations={'Species': '9606'},
+                                     subject_modifier=kinase_activity)
+example_graph.add_directly_increases(bcr_abl1_fus, gab2_ph, c5, e5, annotations={'Species': '9606'},
+                                     subject_modifier=kinase_activity)

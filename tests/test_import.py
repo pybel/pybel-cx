@@ -2,10 +2,12 @@
 
 """Testing for CX and NDEx import/export."""
 
+import os
+import tempfile
 import unittest
 
 from pybel.examples import braf_graph, egf_graph, sialic_acid_graph, statin_graph
-from pybel_cx.cx import from_cx, to_cx
+from pybel_cx.cx import from_cx, from_cx_file, from_cx_jsons, to_cx, to_cx_file, to_cx_jsons
 from tests.cases import TestCase
 from tests.examples import example_graph
 
@@ -14,12 +16,40 @@ class TestSchema1(TestCase):
     """Test mapping schema 1."""
 
     def help_test_graph(self, graph):
-        """Help test a graph with remapping.
+        """Help test a graph round trip through a JSON object.
 
-        :param pybel.BELGraph graph:
+        :type graph: pybel.BELGraph
         """
-        reconstituted = from_cx(to_cx(graph))
+        graph_cx = to_cx(graph)
+        reconstituted = from_cx(graph_cx)
         self.assert_graph_equal(graph, reconstituted)
+
+    def help_test_jsons(self, graph):
+        """Help test a graph round trip through a JSON string.
+
+        :type graph: pybel.BELGraph
+        """
+        graph_cx_str = to_cx_jsons(graph)
+        reconstituted = from_cx_jsons(graph_cx_str)
+        self.assert_graph_equal(graph, reconstituted)
+
+    def help_test_file(self, graph):
+        """Help test a graph round trip through a file.
+
+        :type graph: pybel.BELGraph
+        """
+        fd, path = tempfile.mkstemp()
+
+        with open(path, 'w') as file:
+            to_cx_file(graph, file)
+
+        with open(path) as file:
+            reconstituted = from_cx_file(file)
+
+        self.assert_graph_equal(graph, reconstituted)
+
+        os.close(fd)
+        os.remove(path)
 
     def test_sialic_acid_graph(self):
         """Test the round trip in the sialic acid graph."""
@@ -40,6 +70,14 @@ class TestSchema1(TestCase):
     def test_example(self):
         """Test the round trip in an example graph."""
         self.help_test_graph(example_graph)
+
+    def test_example_jsons(self):
+        """Test the round trip to a JSON string with the example graph."""
+        self.help_test_graph(example_graph)
+
+    def test_example_file(self):
+        """Test the round trip to a file with the example graph."""
+        self.help_test_file(example_graph)
 
 
 if __name__ == '__main__':

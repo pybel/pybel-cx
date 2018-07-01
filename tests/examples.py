@@ -14,7 +14,7 @@ from pybel.dsl import (
 
 
 class _BELGraph(BELGraph):
-    def add_increases(self, u, v, citation, evidence, *, annotations=None, subject_modifier=None, object_modifier=None):
+    def add_increases(self, u, v, citation, evidence, annotations=None, subject_modifier=None, object_modifier=None):
         if not isinstance(evidence, str):
             raise TypeError
         return self.add_qualified_edge(u, v, INCREASES, evidence, citation, annotations=annotations,
@@ -27,7 +27,7 @@ class _BELGraph(BELGraph):
         return self.add_qualified_edge(u, v, DIRECTLY_INCREASES, evidence, citation, annotations=annotations,
                                        subject_modifier=subject_modifier, object_modifier=object_modifier)
 
-    def add_decreases(self, u, v, citation, evidence, *, annotations=None, subject_modifier=None, object_modifier=None):
+    def add_decreases(self, u, v, citation, evidence, annotations=None, subject_modifier=None, object_modifier=None):
         if not isinstance(evidence, str):
             raise TypeError
         return self.add_qualified_edge(u, v, DECREASES, evidence, citation, annotations=annotations,

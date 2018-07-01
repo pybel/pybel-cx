@@ -46,7 +46,8 @@ NDEX_SOURCE_FORMAT = "ndex:sourceFormat"
 
 
 def _cx_to_dict(list_of_dicts, key_tag='k', value_tag='v'):
-    """
+    """Convert a CX list of dictionaries to a flat dictionary.
+
     :param list[dict] list_of_dicts:
     :param str key_tag:
     :param str value_tag:
@@ -107,7 +108,7 @@ def calculate_canonical_cx_identifier(graph, node):
 
 def build_node_mapping(graph):
     """Build a mapping from a graph's nodes to their canonical sort order.
-    
+
     :param pybel.BELGraph graph: A BEL graph
     :return: A mapping from a graph's nodes to their canonical sort order
     :rtype: dict[tuple,int]
@@ -357,7 +358,7 @@ def to_cx_file(graph, file, indent=2, **kwargs):
 
 def to_cx_jsons(graph, **kwargs):
     """Dump a BEL graph as CX JSON to a string.
-    
+
     :param pybel.BELGraph graph: A BEL Graph
     :return: CX JSON string
     :rtype: str
@@ -366,14 +367,15 @@ def to_cx_jsons(graph, **kwargs):
     return json.dumps(graph_cx_json_str, **kwargs)
 
 
-def _iterate_list_of_dicts(lod):
-    """
-    :type lod: list[dict[A,B]]
+def _iterate_list_of_dicts(list_of_dicts):
+    """Iterate over a list of dictionaries.
+
+    :type list_of_dicts: list[dict[A,B]]
     :rtype: iter[tuple[A,B]]
     """
-    for l in lod:
-        for k, v in l.items():
-            yield k, v
+    for dictionary in list_of_dicts:
+        for key, value in dictionary.items():
+            yield key, value
 
 
 def from_cx(cx):
@@ -569,7 +571,7 @@ def from_cx(cx):
 
 def from_cx_jsons(graph_cx_json_str):
     """Reconstitute a BEL graph from a CX JSON string.
-    
+
     :param str graph_cx_json_str: CX JSON string 
     :return: A BEL graph representing the CX graph contained in the string
     :rtype: pybel.BELGraph

@@ -6,7 +6,7 @@ This module provides a wrapper around CX import/export and the NDEx
 `client <https://github.com/ndexbio/ndex-python>`_ to allow for easy upload and download of BEL documents to the
 `NDEx <http://www.ndexbio.org/>`_ database.
 
-The programmatic API also provides options for specifying username and password. By default, it checks the environment 
+The programmatic API also provides options for specifying username and password. By default, it checks the environment
 variables: ``NDEX_USERNAME`` and ``NDEX_PASSWORD``.
 """
 
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 def build_ndex_client(username=None, password=None, debug=False):
     """Build an NDEx client by checking environmental variables.
 
-    It has been requested that the :code:`ndex-client` has this functionality built-in by this GitHub 
+    It has been requested that the :code:`ndex-client` has this functionality built-in by this GitHub
     `issue <https://github.com/ndexbio/ndex-python/issues/9>`_
 
     :param Optional[str] username: NDEx username
@@ -39,7 +39,6 @@ def build_ndex_client(username=None, password=None, debug=False):
     :return: An NDEx client
     :rtype: ndex2.client.Ndex2
     """
-
     if username is None and NDEX_USERNAME in os.environ:
         username = os.environ[NDEX_USERNAME]
         log.info('got NDEx username from environment: %s', username)

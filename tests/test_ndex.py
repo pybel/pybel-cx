@@ -7,7 +7,7 @@ import time
 import unittest
 
 from pybel_cx import from_ndex, to_ndex
-from pybel_cx.ndex_utils import NDEX_PASSWORD, NDEX_USERNAME
+from pybel_cx.ndex_utils import NDEX_PASSWORD, NDEX_USERNAME, build_ndex_client
 from tests.cases import TestCase
 from tests.examples import example_graph
 
@@ -27,6 +27,9 @@ class TestInterchange(TestCase):
         time.sleep(10)
         reconstituted = from_ndex(network_id)
         self.assert_graph_equal(graph, reconstituted)
+
+        ndex_client = build_ndex_client()
+        ndex_client.delete_network(network_id)
 
     @unittest.skipUnless(_has_ndex_cred, 'Need NDEx credentials')
     def test_example_ndex(self):

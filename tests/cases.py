@@ -23,7 +23,6 @@ def _edge_to_tuple(u, v, data):
     :param dict data: The edge's data dictionary
     :return: A tuple that can be hashed representing this edge. Makes no promises to its structure.
     """
-
     citation = data.get(CITATION)
     if citation is None:
         citation_hashable = None

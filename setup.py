@@ -41,6 +41,16 @@ ENTRY_POINTS = {
     'console_scripts': [
         'cx_to_bel = pybel_cx.cli:cx_to_bel',
         'bel_to_cx = pybel_cx.cli:bel_to_cx',
+    ],
+    'pybel.converter': [
+        'to_cx = pybel_cx:to_cx',
+        'to_cx_file = pybel_cx:to_cx_file',
+        'to_cx_jsons = pybel_cx:to_cx_jsons',
+        'from_cx = pybel_cx:from_cx',
+        'from_cx_file = pybel_cx:from_cx_file',
+        'from_cx_jsons = pybel_cx:from_cx_jsons',
+        'to_ndex = pybel_cx:to_ndex',
+        'from_ndex = pybel_cx:from_ndex',
     ]
 }
 DEPENDENCY_LINKS = [

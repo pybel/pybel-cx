@@ -3,21 +3,36 @@ cache: pip
 language: python
 python:
   - 3.6
-matrix:
+stages:
+  - lint
+  - docs
+  - test
+jobs:
   include:
-    - env: TOXENV=py
-    - env: TOXENV=docs
+    # lint stage
+    - stage: lint
+      env: TOXENV=flake8
     - env: TOXENV=manifest
+
+    # docs stage
+    - stage: docs
+      env: TOXENV=doc8
     - env: TOXENV=rst-lint
-    - env: TOXENV=flake8
+    - env: TOXENV=docs
+
+    # test stage
+    - stage: test
+      env: TOXENV=py
+
+matrix:
   allow_failures:
     - env: TOXENV=flake8
+
 install:
-  - pip install codecov coverage tox
+  - sh -c 'if [ "$TOXENV" = "py" ]; then pip install tox codecov; else pip install tox; fi'
 script:
   - tox
 after_success:
-  - tox -e coverage-report
-  - codecov
+  - sh -c 'if [ "$TOXENV" = "py" ]; then tox -e coverage-report; codecov; fi'
 notifications:
   slack: pybel:n2KbWKBum3musnBg3L76gGwq

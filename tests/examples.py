@@ -106,7 +106,7 @@ the MTHFR 677C>T polymorphism as a candidate AD risk factor"
 SET Subgraph = "Epigenetic modification subgraph"
 g(HGNC:MTHFR,sub(C,677,T)) =| p(HGNC:MTHFR)
 g(HGNC:MTHFR,sub(A,1298,C)) =| p(HGNC:MTHFR)
-g(HGNC:MTHFR,sub(C,677,T)) neg a(CHEBI:"folic acid") 
+g(HGNC:MTHFR,sub(C,677,T)) neg a(CHEBI:"folic acid")
 g(HGNC:MTHFR,sub(C,677,T)) pos path(MESH:"Alzheimer Disease")
 """
 

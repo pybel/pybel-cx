@@ -6,8 +6,8 @@ import logging
 import sys
 
 import click
-
 from pybel import from_lines, to_bel_lines
+
 from .cx import from_cx_file, to_cx_file
 
 log = logging.getLogger(__name__)

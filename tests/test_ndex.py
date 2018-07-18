@@ -7,7 +7,7 @@ import time
 import unittest
 
 from pybel_cx import from_ndex, to_ndex
-from pybel_cx.ndex_utils import NDEX_PASSWORD, NDEX_USERNAME, build_ndex_client
+from pybel_cx.ndex_utils import build_ndex_client, NDEX_PASSWORD, NDEX_USERNAME
 from tests.cases import TestCase
 from tests.examples import example_graph
 

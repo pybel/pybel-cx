@@ -14,10 +14,10 @@ of Cytoscape.
 
 """
 
+from collections import defaultdict
 import json
 import logging
 import time
-from collections import defaultdict
 
 from pybel import BELGraph
 from pybel.canonicalize import node_to_bel
@@ -25,7 +25,7 @@ from pybel.constants import (
     ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
     GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
     MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS, REACTION,
-    RELATION, SUBJECT, VARIANTS, unqualified_edges,
+    RELATION, SUBJECT, unqualified_edges, VARIANTS
 )
 from pybel.utils import expand_dict, flatten_dict, hash_node
 
@@ -571,7 +571,7 @@ def from_cx(cx):
 def from_cx_jsons(graph_cx_json_str):
     """Reconstitute a BEL graph from a CX JSON string.
 
-    :param str graph_cx_json_str: CX JSON string 
+    :param str graph_cx_json_str: CX JSON string
     :return: A BEL graph representing the CX graph contained in the string
     :rtype: pybel.BELGraph
     """

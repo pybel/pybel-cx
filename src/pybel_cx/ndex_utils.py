@@ -83,9 +83,9 @@ def to_ndex(graph, username=None, password=None, debug=False):
 
     Example Usage:
 
-    >>> import pybel
-    >>> graph = pybel.from_url('http://resources.openbel.org/belframework/20150611/knowledge/small_corpus.bel')
-    >>> pybel.to_ndex(graph)
+    >>> from pybel.examples import sialic_acid_graph
+    >>> from pybel_cx import to_ndex
+    >>> to_ndex(sialic_acid_graph)
     """
     cx = to_cx(graph)
     return cx_to_ndex(cx, username=username, password=password, debug=debug)
@@ -104,7 +104,7 @@ def from_ndex(network_id, username=None, password=None, debug=False):
 
     Example Usage:
 
-    >>> from pybel import from_ndex
+    >>> from pybel_cx import from_ndex
     >>> network_id = '1709e6f3-04a1-11e7-aba2-0ac135e8bacf'
     >>> graph = from_ndex(network_id)
     """

@@ -346,11 +346,10 @@ def to_cx_file(graph, file, indent=2, **kwargs):
 
     Example:
 
-    >>> from pybel import from_url, to_cx_file
-    >>> from pybel.constants import SMALL_CORPUS_URL
-    >>> graph = from_url(SMALL_CORPUS_URL)
+    >>> from pybel.examples import sialic_acid_graph
+    >>> from pybel_cx import to_cx_file
     >>> with open('graph.cx', 'w') as f:
-    >>> ... to_cx_file(graph, f)
+    >>> ... to_cx_file(sialic_acid_graph, f)
     """
     graph_cx_json_dict = to_cx(graph)
     json.dump(graph_cx_json_dict, file, ensure_ascii=False, indent=indent, **kwargs)

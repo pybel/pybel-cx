@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 #: The version of PyBEL-CX
-VERSION = '0.1.1'
+VERSION = '0.1.2-dev'
 
 #: The name of the environment variable to search or the NDEx username
 NDEX_USERNAME = 'NDEX_USERNAME'

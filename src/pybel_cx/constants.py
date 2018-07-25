@@ -3,6 +3,7 @@
 """Constants for PyBEL-CX."""
 
 __all__ = [
+    'VERSION',
     'NDEX_USERNAME',
     'NDEX_PASSWORD',
 ]

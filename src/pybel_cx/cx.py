@@ -103,7 +103,7 @@ def calculate_canonical_cx_identifier(data):
 
     if VARIANTS not in data and FUSION not in data:  # this is should be a simple node
         if name:
-            return '{}:{}'.format(namespace, name)
+            return name
         if identifier:
             return '{}:{}'.format(namespace, identifier)
 

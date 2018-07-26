@@ -24,8 +24,8 @@ from pybel.canonicalize import node_to_bel
 from pybel.constants import (
     ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
     GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
-    MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS, REACTION,
-    RELATION, SUBJECT, unqualified_edges, VARIANTS
+    IDENTIFIER, MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS,
+    REACTION, RELATION, SUBJECT, VARIANTS, unqualified_edges,
 )
 from pybel.utils import expand_dict, flatten_dict, hash_node
 
@@ -97,8 +97,15 @@ def calculate_canonical_cx_identifier(data):
     if VARIANTS in data or FUSION in data or data[FUNCTION] in {REACTION, COMPOSITE, COMPLEX}:
         return node_to_bel(data)
 
+    namespace = data[NAMESPACE]
+    name = data.get(NAME)
+    identifier = data.get(IDENTIFIER)
+
     if VARIANTS not in data and FUSION not in data:  # this is should be a simple node
-        return '{}:{}'.format(data[NAMESPACE], data[NAME])
+        if name:
+            return '{}:{}'.format(namespace, name)
+        if identifier:
+            return '{}:{}'.format(namespace, identifier)
 
     raise ValueError('Unexpected node data: {}'.format(data))
 

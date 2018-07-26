@@ -145,10 +145,15 @@ def to_cx(graph):
         data = graph.node[node]
         node_index_data[node_index] = data
 
-        nodes_entry.append({
+        node_entry_dict = {
             '@id': node_index,
             'n': calculate_canonical_cx_identifier(data)
-        })
+        }
+
+        if IDENTIFIER in data:
+            node_entry_dict['r'] = '{}:{}'.format(data[NAMESPACE], data[IDENTIFIER])
+
+        nodes_entry.append(node_entry_dict)
 
         if IDENTIFIER in data and NAMESPACE in data:  # add alias
             node_attributes_entry.append({

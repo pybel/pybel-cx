@@ -82,18 +82,15 @@ def _restore_fusion_dict(d):
     }
 
 
-def calculate_canonical_cx_identifier(graph, node):
+def calculate_canonical_cx_identifier(data):
     """Calculate the canonical name for a given node.
 
     If it is a simple node, uses the namespace:name combination. Otherwise, it uses the BEL string.
 
-    :param pybel.BELGraph graph: A BEL Graph
-    :param tuple node: A node
+    :param dict: PyBEL node data dictionary
     :return: Appropriate identifier for the node for CX indexing
     :rtype: str
     """
-    data = graph.node[node]
-
     if data[FUNCTION] == COMPLEX and NAMESPACE in data:
         return '{}:{}'.format(data[NAMESPACE], data[NAME])
 
@@ -143,7 +140,7 @@ def to_cx(graph):
 
         nodes_entry.append({
             '@id': node_index,
-            'n': calculate_canonical_cx_identifier(graph, node)
+            'n': calculate_canonical_cx_identifier(data)
         })
 
         for k, v in data.items():

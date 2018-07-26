@@ -150,6 +150,16 @@ def to_cx(graph):
             'n': calculate_canonical_cx_identifier(data)
         })
 
+        if IDENTIFIER in data and NAMESPACE in data:  # add alias
+            node_attributes_entry.append({
+                'po': node_index,
+                'n': 'alias',
+                'v': [
+                    '{}:{}'.format(data[NAMESPACE], data[IDENTIFIER]),
+                ],
+                'd': 'list_of_str',
+            })
+
         for k, v in data.items():
             if k == VARIANTS:
                 for i, el in enumerate(v):

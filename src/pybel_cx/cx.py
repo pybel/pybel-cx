@@ -25,7 +25,7 @@ from pybel.constants import (
     ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
     GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
     IDENTIFIER, MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS,
-    REACTION, RELATION, SUBJECT, VARIANTS, unqualified_edges,
+    REACTION, RELATION, SUBJECT, unqualified_edges, VARIANTS,
 )
 from pybel.utils import expand_dict, flatten_dict, hash_node
 
@@ -422,7 +422,8 @@ def from_cx(cx):
             annotation_lists_aspect.extend(value)
 
         elif key == '@context':
-            context_entry.update(value[0])
+            for element in value:
+                context_entry.update(element)
 
         elif key == 'networkAttributes':
             network_attributes_aspect.extend(value)

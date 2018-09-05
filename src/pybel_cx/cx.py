@@ -14,10 +14,10 @@ of Cytoscape.
 
 """
 
-from collections import defaultdict
 import json
 import logging
 import time
+from collections import defaultdict
 
 from pybel import BELGraph
 from pybel.canonicalize import node_to_bel
@@ -25,7 +25,7 @@ from pybel.constants import (
     ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
     GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
     IDENTIFIER, MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS,
-    REACTION, RELATION, SUBJECT, unqualified_edges, VARIANTS,
+    REACTION, RELATION, SUBJECT, UNQUALIFIED_EDGES, VARIANTS,
 )
 from pybel.utils import expand_dict, flatten_dict, hash_node
 
@@ -576,7 +576,7 @@ def from_cx(cx):
                 object_modifier=edge_data_pp[eid].get(OBJECT),
                 annotations=edge_data_pp[eid].get(ANNOTATIONS),
             )
-        elif edge_relation[eid] in unqualified_edges:
+        elif edge_relation[eid] in UNQUALIFIED_EDGES:
             graph.add_unqualified_edge(
                 nid_node_tuple[eid_source_nid[eid]],
                 nid_node_tuple[eid_target_nid[eid]],

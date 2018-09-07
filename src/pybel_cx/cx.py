@@ -11,23 +11,25 @@ of Cytoscape.
     - The NDEx Data Model `Specification <http://www.home.ndexbio.org/data-model/>`_
     - `Cytoscape.js <http://js.cytoscape.org/>`_
     - CX Support for Cytoscape.js on the Cytoscape `App Store <http://apps.cytoscape.org/apps/cxsupport>`_
-
 """
 
 import json
 import logging
-import time
 from collections import defaultdict
+from operator import methodcaller
+from typing import Dict, List, Mapping
+
+import time
 
 from pybel import BELGraph
-from pybel.canonicalize import node_to_bel
 from pybel.constants import (
     ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
     GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
     IDENTIFIER, MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS,
     REACTION, RELATION, SUBJECT, UNQUALIFIED_EDGES, VARIANTS,
 )
-from pybel.utils import expand_dict, flatten_dict, hash_node
+from pybel.dsl import BaseEntity
+from pybel.utils import expand_dict, flatten_dict
 
 __all__ = [
     'to_cx',
@@ -82,59 +84,45 @@ def _restore_fusion_dict(d):
     }
 
 
-def calculate_canonical_cx_identifier(data):
+def calculate_canonical_cx_identifier(node: BaseEntity) -> str:
     """Calculate the canonical name for a given node.
 
     If it is a simple node, uses the namespace:name combination. Otherwise, it uses the BEL string.
-
-    :param dict: PyBEL node data dictionary
-    :return: Appropriate identifier for the node for CX indexing
-    :rtype: str
     """
-    if data[FUNCTION] == COMPLEX and NAMESPACE in data:
-        return '{}:{}'.format(data[NAMESPACE], data[NAME])
+    if node[FUNCTION] == COMPLEX and NAMESPACE in node:
+        return '{}:{}'.format(node[NAMESPACE], node[NAME])
 
-    if VARIANTS in data or FUSION in data or data[FUNCTION] in {REACTION, COMPOSITE, COMPLEX}:
-        return node_to_bel(data)
+    if VARIANTS in node or FUSION in node or node[FUNCTION] in {REACTION, COMPOSITE, COMPLEX}:
+        return node.as_bel()
 
-    namespace = data[NAMESPACE]
-    name = data.get(NAME)
-    identifier = data.get(IDENTIFIER)
+    namespace = node[NAMESPACE]
+    name = node.get(NAME)
+    identifier = node.get(IDENTIFIER)
 
-    if VARIANTS not in data and FUSION not in data:  # this is should be a simple node
+    if VARIANTS not in node and FUSION not in node:  # this is should be a simple node
         if name:
             return name
         if identifier:
             return '{}:{}'.format(namespace, identifier)
 
-    raise ValueError('Unexpected node data: {}'.format(data))
+    raise ValueError('Unexpected node data: {}'.format(node))
 
 
-def build_node_mapping(graph):
-    """Build a mapping from a graph's nodes to their canonical sort order.
-
-    :param pybel.BELGraph graph: A BEL graph
-    :return: A mapping from a graph's nodes to their canonical sort order
-    :rtype: dict[tuple,int]
-    """
+def build_node_mapping(graph: BELGraph) -> Mapping[BaseEntity: int]:
+    """Build a mapping from a graph's nodes to their canonical sort order."""
     return {
         node: node_index
-        for node_index, node in enumerate(sorted(graph, key=hash_node))
+        for node_index, node in enumerate(sorted(graph, key=methodcaller('as_bel')))
     }
 
 
-def to_cx(graph):
+def to_cx(graph: BELGraph) -> List[Dict]:
     """Convert a BEL Graph to a CX JSON object for use with `NDEx <http://www.ndexbio.org/>`_.
-
-    :param pybel.BELGraph graph: A BEL Graph
-    :return: The CX JSON for this graph
-    :rtype: list
 
     .. seealso::
 
         - `NDEx Python Client <https://github.com/ndexbio/ndex-python>`_
         - `PyBEL / NDEx Python Client Wrapper <https://github.com/pybel/pybel2ndex>`_
-
     """
     node_mapping = build_node_mapping(graph)
     node_index_data = {}
@@ -142,30 +130,29 @@ def to_cx(graph):
     node_attributes_entry = []
 
     for node, node_index in node_mapping.items():
-        data = graph.node[node]
-        node_index_data[node_index] = data
+        node_index_data[node_index] = node
 
         node_entry_dict = {
             '@id': node_index,
-            'n': calculate_canonical_cx_identifier(data)
+            'n': calculate_canonical_cx_identifier(node)
         }
 
-        if IDENTIFIER in data:
-            node_entry_dict['r'] = '{}:{}'.format(data[NAMESPACE], data[IDENTIFIER])
+        if IDENTIFIER in node:
+            node_entry_dict['r'] = '{}:{}'.format(node[NAMESPACE], node[IDENTIFIER])
 
         nodes_entry.append(node_entry_dict)
 
-        if IDENTIFIER in data and NAMESPACE in data:  # add alias
+        if IDENTIFIER in node and NAMESPACE in node:  # add alias
             node_attributes_entry.append({
                 'po': node_index,
                 'n': 'alias',
                 'v': [
-                    '{}:{}'.format(data[NAMESPACE], data[IDENTIFIER]),
+                    '{}:{}'.format(node[NAMESPACE], node[IDENTIFIER]),
                 ],
                 'd': 'list_of_str',
             })
 
-        for k, v in data.items():
+        for k, v in node.items():
             if k == VARIANTS:
                 for i, el in enumerate(v):
                     for a, b in flatten_dict(el).items():
@@ -207,7 +194,7 @@ def to_cx(graph):
     edges_entry = []
     edge_attributes_entry = []
 
-    for edge_index, (source, target, d) in enumerate(graph.edges_iter(data=True)):
+    for edge_index, (source, target, d) in enumerate(graph.edges(data=True)):
         uid = node_mapping[source]
         vid = node_mapping[target]
 
@@ -396,11 +383,10 @@ def _iterate_list_of_dicts(list_of_dicts):
             yield key, value
 
 
-def from_cx(cx):
+def from_cx(cx: List[Dict]) -> BELGraph:
     """Rebuild a BELGraph from CX JSON output from PyBEL.
 
-    :param list[dict] cx: The CX JSON for this graph
-    :rtype: pybel.BELGraph
+    :param cx: The CX JSON for this graph
     """
     graph = BELGraph()
 
@@ -588,23 +574,19 @@ def from_cx(cx):
     return graph
 
 
-def from_cx_jsons(graph_cx_json_str):
+def from_cx_jsons(graph_cx_json_str: str) -> BELGraph:
     """Reconstitute a BEL graph from a CX JSON string.
 
-    :param str graph_cx_json_str: CX JSON string
+    :param graph_cx_json_str: CX JSON string
     :return: A BEL graph representing the CX graph contained in the string
-    :rtype: pybel.BELGraph
     """
-    graph_cx_json_dict = json.loads(graph_cx_json_str)
-    return from_cx(graph_cx_json_dict)
+    return from_cx(json.loads(graph_cx_json_str))
 
 
-def from_cx_file(file):
+def from_cx_file(file) -> BELGraph:
     """Read a file containing CX JSON and converts to a BEL graph.
 
     :param file file: A readable file or file-like containing the CX JSON for this graph
     :return: A BEL Graph representing the CX graph contained in the file
-    :rtype: BELGraph
     """
-    graph_cx_json_dict = json.load(file)
-    return from_cx(graph_cx_json_dict)
+    return from_cx(json.load(file))

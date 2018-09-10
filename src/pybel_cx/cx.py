@@ -15,11 +15,10 @@ of Cytoscape.
 
 import json
 import logging
+import time
 from collections import defaultdict
 from operator import methodcaller
-from typing import Dict, List, Mapping
-
-import time
+from typing import Dict, List, Mapping, TextIO
 
 from pybel import BELGraph
 from pybel.constants import (
@@ -47,21 +46,15 @@ CX_NODE_NAME = 'label'
 NDEX_SOURCE_FORMAT = "ndex:sourceFormat"
 
 
-def _cx_to_dict(list_of_dicts, key_tag='k', value_tag='v'):
-    """Convert a CX list of dictionaries to a flat dictionary.
-
-    :param list[dict] list_of_dicts:
-    :param str key_tag:
-    :param str value_tag:
-    :rtype: dict
-    """
+def _cx_to_dict(list_of_dicts: List[Dict], key_tag: str = 'k', value_tag: str = 'v') -> Dict:
+    """Convert a CX list of dictionaries to a flat dictionary."""
     return {
         d[key_tag]: d[value_tag]
         for d in list_of_dicts
     }
 
 
-def _cleanse_fusion_dict(d):
+def _cleanse_fusion_dict(d: Dict) -> Dict:
     """Fix the fusion partner names."""
     return {
         k.replace('_', ''): v
@@ -77,7 +70,7 @@ _p_dict = {
 }
 
 
-def _restore_fusion_dict(d):
+def _restore_fusion_dict(d: Dict) -> Dict:
     return {
         _p_dict[k]: v
         for k, v in d.items()
@@ -108,7 +101,7 @@ def calculate_canonical_cx_identifier(node: BaseEntity) -> str:
     raise ValueError('Unexpected node data: {}'.format(node))
 
 
-def build_node_mapping(graph: BELGraph) -> Mapping[BaseEntity: int]:
+def build_node_mapping(graph: BELGraph) -> Mapping[BaseEntity, int]:
     """Build a mapping from a graph's nodes to their canonical sort order."""
     return {
         node: node_index
@@ -343,7 +336,7 @@ def to_cx(graph: BELGraph) -> List[Dict]:
     return cx
 
 
-def to_cx_file(graph, file, indent=2, **kwargs):
+def to_cx_file(graph: BELGraph, file: TextIO, indent=2, **kwargs) -> None:
     """Write a BEL graph to a JSON file in CX format.
 
     :param pybel.BELGraph graph: A BEL graph
@@ -361,10 +354,9 @@ def to_cx_file(graph, file, indent=2, **kwargs):
     json.dump(graph_cx_json_dict, file, ensure_ascii=False, indent=indent, **kwargs)
 
 
-def to_cx_jsons(graph, **kwargs):
+def to_cx_jsons(graph: BELGraph, **kwargs) -> str:
     """Dump a BEL graph as CX JSON to a string.
 
-    :param pybel.BELGraph graph: A BEL Graph
     :return: CX JSON string
     :rtype: str
     """
@@ -372,7 +364,7 @@ def to_cx_jsons(graph, **kwargs):
     return json.dumps(graph_cx_json_str, **kwargs)
 
 
-def _iterate_list_of_dicts(list_of_dicts):
+def _iterate_list_of_dicts(list_of_dicts: List[Dict]):
     """Iterate over a list of dictionaries.
 
     :type list_of_dicts: list[dict[A,B]]
@@ -508,27 +500,26 @@ def from_cx(cx: List[Dict]) -> BELGraph:
         eid_source_nid[eid] = data['s']
         eid_target_nid[eid] = data['t']
 
-    edge_data = defaultdict(dict)
+    edge_data: Dict[str, Dict[str, str]] = defaultdict(dict)
     for data in edge_annotations_aspect:
         edge_data[data['po']][data['n']] = data['v']
 
-    edge_citation = defaultdict(dict)
+    edge_citation: Dict[str, Dict[str, str]] = defaultdict(dict)
     edge_subject = defaultdict(dict)
     edge_object = defaultdict(dict)
     edge_annotations = defaultdict(lambda: defaultdict(dict))
-
     edge_data_pp = defaultdict(dict)
 
     for eid, data in edge_data.items():
         for key, value in data.items():
             if key.startswith(CITATION):
-                _, vl = key.split('_', 1)
+                vl = after_underscore(key)
                 edge_citation[eid][vl] = value
             elif key.startswith(SUBJECT):
-                _, vl = key.split('_', 1)
+                vl = after_underscore(key)
                 edge_subject[eid][vl] = value
             elif key.startswith(OBJECT):
-                _, vl = key.split('_', 1)
+                vl = after_underscore(key)
                 edge_object[eid][vl] = value
             elif key == EVIDENCE:
                 edge_data_pp[eid][EVIDENCE] = value
@@ -574,6 +565,11 @@ def from_cx(cx: List[Dict]) -> BELGraph:
     return graph
 
 
+def after_underscore(key):
+    _, vl = key.split('_', 1)
+    return vl
+
+
 def from_cx_jsons(graph_cx_json_str: str) -> BELGraph:
     """Reconstitute a BEL graph from a CX JSON string.
 
@@ -583,7 +579,7 @@ def from_cx_jsons(graph_cx_json_str: str) -> BELGraph:
     return from_cx(json.loads(graph_cx_json_str))
 
 
-def from_cx_file(file) -> BELGraph:
+def from_cx_file(file: TextIO) -> BELGraph:
     """Read a file containing CX JSON and converts to a BEL graph.
 
     :param file file: A readable file or file-like containing the CX JSON for this graph

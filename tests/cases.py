@@ -4,34 +4,34 @@
 
 import json
 import unittest
+from typing import Mapping, Tuple
 
+from pybel import BELGraph, BaseEntity
 from pybel.constants import (
-    ANNOTATIONS, CITATION, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, OBJECT,
-    RELATION, SUBJECT,
+    ANNOTATIONS, CITATION, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, OBJECT, RELATION,
+    SUBJECT,
 )
+from pybel.typing import EdgeData
 
 __all__ = [
     'TestCase',
 ]
 
 
-def _edge_to_tuple(u, v, data):
+def _edge_to_tuple(u: BaseEntity, v: BaseEntity, edge_data: EdgeData):
     """Convert an edge to tuple.
 
-    :param tuple u: The source BEL node
-    :param tuple v: The target BEL node
-    :param dict data: The edge's data dictionary
     :return: A tuple that can be hashed representing this edge. Makes no promises to its structure.
     """
-    citation = data.get(CITATION)
+    citation = edge_data.get(CITATION)
     if citation is None:
         citation_hashable = None
     else:
         citation_hashable = (citation[CITATION_TYPE], citation[CITATION_REFERENCE])
 
-    evidence_hashable = data.get(EVIDENCE)
+    evidence_hashable = edge_data.get(EVIDENCE)
 
-    annotations = data.get(ANNOTATIONS)
+    annotations = edge_data.get(ANNOTATIONS)
     if annotations is None:
         annotations_hashable = None
     else:
@@ -40,13 +40,13 @@ def _edge_to_tuple(u, v, data):
             for key, values in sorted(annotations.items())
         )
 
-    subject = data.get(SUBJECT)
+    subject = edge_data.get(SUBJECT)
     if subject is None:
         subject_hashable = None
     else:
         subject_hashable = json.dumps(subject, ensure_ascii=True, sort_keys=True, indent=0)
 
-    obj = data.get(OBJECT)
+    obj = edge_data.get(OBJECT)
     if obj is None:
         object_hashable = None
     else:
@@ -55,7 +55,7 @@ def _edge_to_tuple(u, v, data):
     return (
         u,
         v,
-        data[RELATION],
+        edge_data[RELATION],
         citation_hashable,
         evidence_hashable,
         annotations_hashable,
@@ -64,19 +64,15 @@ def _edge_to_tuple(u, v, data):
     )
 
 
-def _hash_edge(u, v, data):
+def _hash_edge(u: BaseEntity, v: BaseEntity, data: EdgeData) -> int:
     """Convert an edge tuple to a hash.
 
-    :param tuple u: The source BEL node
-    :param tuple v: The target BEL node
-    :param dict data: The edge's data dictionary
     :return: A hashed version of the edge tuple using md5 hash of the binary pickle dump of u, v, and the json dump of d
-    :rtype: str
     """
     return hash(_edge_to_tuple(u, v, data))
 
 
-def _get_edge_dict(graph):
+def _get_edge_dict(graph: BELGraph) -> Mapping[int, Tuple[BaseEntity, BaseEntity, EdgeData]]:
     return {
         _hash_edge(u, v, data): (u, v, data)
         for u, v, k, data in graph.edges(keys=True, data=True)
@@ -86,12 +82,8 @@ def _get_edge_dict(graph):
 class TestCase(unittest.TestCase):
     """Extension to base :class:`unittest.TestCase` with :class:`pybel.BELGraph` comparison."""
 
-    def assert_graph_equal(self, g1, g2):
-        """Assert two BEL graphs are the same.
-
-        :param pybel.BELGraph g1:
-        :param pybel.BELGraph g2:
-        """
+    def assert_graph_equal(self, g1: BELGraph, g2: BELGraph) -> None:
+        """Assert two BEL graphs are the same."""
         self.assertEqual(g1.graph, g2.graph, msg='Metadata were not the same')
 
         # self.assertEqual(g1.number_of_nodes(), g2.number_of_nodes())

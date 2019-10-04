@@ -11,23 +11,25 @@ of Cytoscape.
     - The NDEx Data Model `Specification <http://www.home.ndexbio.org/data-model/>`_
     - `Cytoscape.js <http://js.cytoscape.org/>`_
     - CX Support for Cytoscape.js on the Cytoscape `App Store <http://apps.cytoscape.org/apps/cxsupport>`_
-
 """
 
-from collections import defaultdict
 import json
 import logging
 import time
+from collections import defaultdict
+from operator import methodcaller
+from typing import Dict, List, Mapping, Optional, TextIO
 
 from pybel import BELGraph
-from pybel.canonicalize import node_to_bel
 from pybel.constants import (
     ANNOTATIONS, CITATION, COMPLEX, COMPOSITE, EVIDENCE, FUNCTION, FUSION, GRAPH_ANNOTATION_LIST,
     GRAPH_ANNOTATION_PATTERN, GRAPH_ANNOTATION_URL, GRAPH_METADATA, GRAPH_NAMESPACE_PATTERN, GRAPH_NAMESPACE_URL,
     IDENTIFIER, MEMBERS, NAME, NAMESPACE, OBJECT, PARTNER_3P, PARTNER_5P, PRODUCTS, RANGE_3P, RANGE_5P, REACTANTS,
-    REACTION, RELATION, SUBJECT, unqualified_edges, VARIANTS,
+    REACTION, RELATION, SUBJECT, UNQUALIFIED_EDGES, VARIANTS,
 )
-from pybel.utils import expand_dict, flatten_dict, hash_node
+from pybel.dsl import BaseEntity
+from pybel.tokens import parse_result_to_dsl
+from pybel.utils import expand_dict, flatten_dict
 
 __all__ = [
     'to_cx',
@@ -45,21 +47,15 @@ CX_NODE_NAME = 'label'
 NDEX_SOURCE_FORMAT = "ndex:sourceFormat"
 
 
-def _cx_to_dict(list_of_dicts, key_tag='k', value_tag='v'):
-    """Convert a CX list of dictionaries to a flat dictionary.
-
-    :param list[dict] list_of_dicts:
-    :param str key_tag:
-    :param str value_tag:
-    :rtype: dict
-    """
+def _cx_to_dict(list_of_dicts: List[Dict], key_tag: str = 'k', value_tag: str = 'v') -> Dict:
+    """Convert a CX list of dictionaries to a flat dictionary."""
     return {
         d[key_tag]: d[value_tag]
         for d in list_of_dicts
     }
 
 
-def _cleanse_fusion_dict(d):
+def _cleanse_fusion_dict(d: Dict) -> Dict:
     """Fix the fusion partner names."""
     return {
         k.replace('_', ''): v
@@ -71,70 +67,56 @@ _p_dict = {
     'partner5p': PARTNER_5P,
     'partner3p': PARTNER_3P,
     'range5p': RANGE_5P,
-    'range3p': RANGE_3P
+    'range3p': RANGE_3P,
 }
 
 
-def _restore_fusion_dict(d):
+def _restore_fusion_dict(d: Dict) -> Dict:
     return {
         _p_dict[k]: v
         for k, v in d.items()
     }
 
 
-def calculate_canonical_cx_identifier(data):
+def calculate_canonical_cx_identifier(node: BaseEntity) -> str:
     """Calculate the canonical name for a given node.
 
     If it is a simple node, uses the namespace:name combination. Otherwise, it uses the BEL string.
-
-    :param dict: PyBEL node data dictionary
-    :return: Appropriate identifier for the node for CX indexing
-    :rtype: str
     """
-    if data[FUNCTION] == COMPLEX and NAMESPACE in data:
-        return '{}:{}'.format(data[NAMESPACE], data[NAME])
+    if node[FUNCTION] == COMPLEX and NAMESPACE in node:
+        return '{}:{}'.format(node[NAMESPACE], node[NAME])
 
-    if VARIANTS in data or FUSION in data or data[FUNCTION] in {REACTION, COMPOSITE, COMPLEX}:
-        return node_to_bel(data)
+    if VARIANTS in node or FUSION in node or node[FUNCTION] in {REACTION, COMPOSITE, COMPLEX}:
+        return node.as_bel()
 
-    namespace = data[NAMESPACE]
-    name = data.get(NAME)
-    identifier = data.get(IDENTIFIER)
+    namespace = node[NAMESPACE]
+    name = node.get(NAME)
+    identifier = node.get(IDENTIFIER)
 
-    if VARIANTS not in data and FUSION not in data:  # this is should be a simple node
+    if VARIANTS not in node and FUSION not in node:  # this is should be a simple node
         if name:
             return name
         if identifier:
             return '{}:{}'.format(namespace, identifier)
 
-    raise ValueError('Unexpected node data: {}'.format(data))
+    raise ValueError('Unexpected node data: {}'.format(node))
 
 
-def build_node_mapping(graph):
-    """Build a mapping from a graph's nodes to their canonical sort order.
-
-    :param pybel.BELGraph graph: A BEL graph
-    :return: A mapping from a graph's nodes to their canonical sort order
-    :rtype: dict[tuple,int]
-    """
+def build_node_mapping(graph: BELGraph) -> Mapping[BaseEntity, int]:
+    """Build a mapping from a graph's nodes to their canonical sort order."""
     return {
         node: node_index
-        for node_index, node in enumerate(sorted(graph, key=hash_node))
+        for node_index, node in enumerate(sorted(graph, key=methodcaller('as_bel')))
     }
 
 
-def to_cx(graph):
+def to_cx(graph: BELGraph) -> List[Dict]:
     """Convert a BEL Graph to a CX JSON object for use with `NDEx <http://www.ndexbio.org/>`_.
-
-    :param pybel.BELGraph graph: A BEL Graph
-    :return: The CX JSON for this graph
-    :rtype: list
 
     .. seealso::
 
         - `NDEx Python Client <https://github.com/ndexbio/ndex-python>`_
         - `PyBEL / NDEx Python Client Wrapper <https://github.com/pybel/pybel2ndex>`_
-
     """
     node_mapping = build_node_mapping(graph)
     node_index_data = {}
@@ -142,30 +124,29 @@ def to_cx(graph):
     node_attributes_entry = []
 
     for node, node_index in node_mapping.items():
-        data = graph.node[node]
-        node_index_data[node_index] = data
+        node_index_data[node_index] = node
 
         node_entry_dict = {
             '@id': node_index,
-            'n': calculate_canonical_cx_identifier(data)
+            'n': calculate_canonical_cx_identifier(node),
         }
 
-        if IDENTIFIER in data:
-            node_entry_dict['r'] = '{}:{}'.format(data[NAMESPACE], data[IDENTIFIER])
+        if IDENTIFIER in node:
+            node_entry_dict['r'] = '{}:{}'.format(node[NAMESPACE], node[IDENTIFIER])
 
         nodes_entry.append(node_entry_dict)
 
-        if IDENTIFIER in data and NAMESPACE in data:  # add alias
+        if IDENTIFIER in node and NAMESPACE in node:  # add alias
             node_attributes_entry.append({
                 'po': node_index,
                 'n': 'alias',
                 'v': [
-                    '{}:{}'.format(data[NAMESPACE], data[IDENTIFIER]),
+                    '{}:{}'.format(node[NAMESPACE], node[IDENTIFIER]),
                 ],
                 'd': 'list_of_str',
             })
 
-        for k, v in data.items():
+        for k, v in node.items():
             if k == VARIANTS:
                 for i, el in enumerate(v):
                     for a, b in flatten_dict(el).items():
@@ -180,34 +161,34 @@ def to_cx(graph):
                     node_attributes_entry.append({
                         'po': node_index,
                         'n': '{}_{}'.format(k, a),
-                        'v': b
+                        'v': b,
                     })
 
             elif k == NAME:
                 node_attributes_entry.append({
                     'po': node_index,
                     'n': CX_NODE_NAME,
-                    'v': v
+                    'v': v,
                 })
 
             elif k in {PRODUCTS, REACTANTS, MEMBERS}:
                 node_attributes_entry.append({
                     'po': node_index,
                     'n': k,
-                    'v': json.dumps(v)
+                    'v': json.dumps(v),
                 })
 
             else:
                 node_attributes_entry.append({
                     'po': node_index,
                     'n': k,
-                    'v': v
+                    'v': v,
                 })
 
     edges_entry = []
     edge_attributes_entry = []
 
-    for edge_index, (source, target, d) in enumerate(graph.edges_iter(data=True)):
+    for edge_index, (source, target, d) in enumerate(graph.edges(data=True)):
         uid = node_mapping[source]
         vid = node_mapping[target]
 
@@ -222,14 +203,14 @@ def to_cx(graph):
             edge_attributes_entry.append({
                 'po': edge_index,
                 'n': EVIDENCE,
-                'v': d[EVIDENCE]
+                'v': d[EVIDENCE],
             })
 
             for k, v in d[CITATION].items():
                 edge_attributes_entry.append({
                     'po': edge_index,
                     'n': '{}_{}'.format(CITATION, k),
-                    'v': v
+                    'v': v,
                 })
 
         if ANNOTATIONS in d:
@@ -246,7 +227,7 @@ def to_cx(graph):
                 edge_attributes_entry.append({
                     'po': edge_index,
                     'n': '{}_{}'.format(SUBJECT, k),
-                    'v': v
+                    'v': v,
                 })
 
         if OBJECT in d:
@@ -254,7 +235,7 @@ def to_cx(graph):
                 edge_attributes_entry.append({
                     'po': edge_index,
                     'n': '{}_{}'.format(OBJECT, k),
-                    'v': v
+                    'v': v,
                 })
 
     context_legend = {}
@@ -278,16 +259,16 @@ def to_cx(graph):
     for keyword, resource_type in context_legend.items():
         context_legend_entry.append({
             'k': keyword,
-            'v': resource_type
+            'v': resource_type,
         })
 
     annotation_list_keys_lookup = {keyword: i for i, keyword in enumerate(sorted(graph.annotation_list))}
     annotation_lists_entry = []
     for keyword, values in graph.annotation_list.items():
-        for values in values:
+        for v in values:
             annotation_lists_entry.append({
                 'k': annotation_list_keys_lookup[keyword],
-                'v': values
+                'v': v,
             })
 
     context_entry_dict = {}
@@ -302,12 +283,12 @@ def to_cx(graph):
 
     network_attributes_entry = [{
         "n": NDEX_SOURCE_FORMAT,
-        "v": "PyBEL"
+        "v": "PyBEL",
     }]
     for k, v in graph.document.items():
         network_attributes_entry.append({
             'n': k,
-            'v': v
+            'v': v,
         })
 
     # Coalesce to cx
@@ -334,7 +315,7 @@ def to_cx(graph):
             "lastUpdate": time.time(),
             "consistencyGroup": 1,
             "properties": [],
-            "version": "1.0"
+            "version": "1.0",
         }
 
         if key in {'citations', 'supports', 'nodes', 'edges'}:
@@ -348,7 +329,7 @@ def to_cx(graph):
 
     for key, aspect in cx_pairs:
         cx.append({
-            key: aspect
+            key: aspect,
         })
 
     cx.append({"status": [{"error": "", "success": True}]})
@@ -356,36 +337,34 @@ def to_cx(graph):
     return cx
 
 
-def to_cx_file(graph, file, indent=2, **kwargs):
+def to_cx_file(graph: BELGraph, file: TextIO, indent: Optional[int] = 2, **kwargs) -> None:
     """Write a BEL graph to a JSON file in CX format.
 
-    :param pybel.BELGraph graph: A BEL graph
-    :param file file: A writable file or file-like
-    :param Optional[int] indent: How many spaces to use to pretty print. Change to None for no pretty printing
+    :param graph: A BEL graph
+    :param file: A writable file or file-like
+    :param indent: How many spaces to use to pretty print. Change to None for no pretty printing
 
     Example:
-
     >>> from pybel.examples import sialic_acid_graph
     >>> from pybel_cx import to_cx_file
     >>> with open('graph.cx', 'w') as f:
     >>> ... to_cx_file(sialic_acid_graph, f)
+
     """
     graph_cx_json_dict = to_cx(graph)
     json.dump(graph_cx_json_dict, file, ensure_ascii=False, indent=indent, **kwargs)
 
 
-def to_cx_jsons(graph, **kwargs):
+def to_cx_jsons(graph: BELGraph, **kwargs) -> str:
     """Dump a BEL graph as CX JSON to a string.
 
-    :param pybel.BELGraph graph: A BEL Graph
     :return: CX JSON string
-    :rtype: str
     """
     graph_cx_json_str = to_cx(graph)
     return json.dumps(graph_cx_json_str, **kwargs)
 
 
-def _iterate_list_of_dicts(list_of_dicts):
+def _iterate_list_of_dicts(list_of_dicts: List[Dict]):
     """Iterate over a list of dictionaries.
 
     :type list_of_dicts: list[dict[A,B]]
@@ -396,11 +375,10 @@ def _iterate_list_of_dicts(list_of_dicts):
             yield key, value
 
 
-def from_cx(cx):
+def from_cx(cx: List[Dict]) -> BELGraph:
     """Rebuild a BELGraph from CX JSON output from PyBEL.
 
-    :param list[dict] cx: The CX JSON for this graph
-    :rtype: pybel.BELGraph
+    :param cx: The CX JSON for this graph
     """
     graph = BELGraph()
 
@@ -511,7 +489,8 @@ def from_cx(cx):
         if CX_NODE_NAME in data:
             data[NAME] = data.pop(CX_NODE_NAME)
 
-        nid_node_tuple[nid] = graph.add_node_from_data(data)
+        _node = parse_result_to_dsl(data)
+        nid_node_tuple[nid] = graph.add_node_from_data(_node)
 
     edge_relation = {}
     eid_source_nid = {}
@@ -522,27 +501,26 @@ def from_cx(cx):
         eid_source_nid[eid] = data['s']
         eid_target_nid[eid] = data['t']
 
-    edge_data = defaultdict(dict)
+    edge_data: Dict[str, Dict[str, str]] = defaultdict(dict)
     for data in edge_annotations_aspect:
         edge_data[data['po']][data['n']] = data['v']
 
-    edge_citation = defaultdict(dict)
+    edge_citation: Dict[str, Dict[str, str]] = defaultdict(dict)
     edge_subject = defaultdict(dict)
     edge_object = defaultdict(dict)
     edge_annotations = defaultdict(lambda: defaultdict(dict))
-
     edge_data_pp = defaultdict(dict)
 
     for eid, data in edge_data.items():
         for key, value in data.items():
             if key.startswith(CITATION):
-                _, vl = key.split('_', 1)
+                vl = after_underscore(key)
                 edge_citation[eid][vl] = value
             elif key.startswith(SUBJECT):
-                _, vl = key.split('_', 1)
+                vl = after_underscore(key)
                 edge_subject[eid][vl] = value
             elif key.startswith(OBJECT):
-                _, vl = key.split('_', 1)
+                vl = after_underscore(key)
                 edge_object[eid][vl] = value
             elif key == EVIDENCE:
                 edge_data_pp[eid][EVIDENCE] = value
@@ -576,7 +554,7 @@ def from_cx(cx):
                 object_modifier=edge_data_pp[eid].get(OBJECT),
                 annotations=edge_data_pp[eid].get(ANNOTATIONS),
             )
-        elif edge_relation[eid] in unqualified_edges:
+        elif edge_relation[eid] in UNQUALIFIED_EDGES:
             graph.add_unqualified_edge(
                 nid_node_tuple[eid_source_nid[eid]],
                 nid_node_tuple[eid_target_nid[eid]],
@@ -588,23 +566,24 @@ def from_cx(cx):
     return graph
 
 
-def from_cx_jsons(graph_cx_json_str):
+def after_underscore(key):
+    _, vl = key.split('_', 1)
+    return vl
+
+
+def from_cx_jsons(graph_cx_json_str: str) -> BELGraph:
     """Reconstitute a BEL graph from a CX JSON string.
 
-    :param str graph_cx_json_str: CX JSON string
+    :param graph_cx_json_str: CX JSON string
     :return: A BEL graph representing the CX graph contained in the string
-    :rtype: pybel.BELGraph
     """
-    graph_cx_json_dict = json.loads(graph_cx_json_str)
-    return from_cx(graph_cx_json_dict)
+    return from_cx(json.loads(graph_cx_json_str))
 
 
-def from_cx_file(file):
+def from_cx_file(file: TextIO) -> BELGraph:
     """Read a file containing CX JSON and converts to a BEL graph.
 
     :param file file: A readable file or file-like containing the CX JSON for this graph
     :return: A BEL Graph representing the CX graph contained in the file
-    :rtype: BELGraph
     """
-    graph_cx_json_dict = json.load(file)
-    return from_cx(graph_cx_json_dict)
+    return from_cx(json.load(file))

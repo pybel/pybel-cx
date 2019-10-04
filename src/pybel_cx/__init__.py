@@ -67,15 +67,3 @@ __all__ = [
     'to_cx_jsons',
     'to_ndex',
 ]
-
-__version__ = '0.1.3-dev'
-
-__title__ = 'pybel_cx'
-__description__ = 'A PyBEL extension for interconversion with CX'
-__url__ = 'https://github.com/pybel/pybel-cx'
-
-__author__ = 'Charles Tapley Hoyt'
-__email__ = 'charles.hoyt@scai.fraunhofer.de'
-
-__license__ = 'MIT License'
-__copyright__ = 'Copyright (c) 2018 Charles Tapley Hoyt'

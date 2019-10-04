@@ -345,11 +345,11 @@ def to_cx_file(graph: BELGraph, file: TextIO, indent: Optional[int] = 2, **kwarg
     :param indent: How many spaces to use to pretty print. Change to None for no pretty printing
 
     Example:
-
     >>> from pybel.examples import sialic_acid_graph
     >>> from pybel_cx import to_cx_file
     >>> with open('graph.cx', 'w') as f:
     >>> ... to_cx_file(sialic_acid_graph, f)
+
     """
     graph_cx_json_dict = to_cx(graph)
     json.dump(graph_cx_json_dict, file, ensure_ascii=False, indent=indent, **kwargs)

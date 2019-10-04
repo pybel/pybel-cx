@@ -4,32 +4,14 @@
 
 from pybel import BELGraph
 from pybel.constants import (
-    CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, DECREASES, DIRECTLY_INCREASES, HAS_VARIANT, INCREASES,
-    NEGATIVE_CORRELATION, POSITIVE_CORRELATION,
+    CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, HAS_VARIANT,
 )
 from pybel.dsl import (
     abundance, activity, bioprocess, complex_abundance, gene, gmod, named_complex_abundance, pathology, pmod, protein,
     protein_fusion, protein_substitution, reaction, rna,
 )
 
-
-class _BELGraph(BELGraph):
-    def add_positive_correlation(self, u, v, evidence, citation, *, annotations=None, subject_modifier=None,
-                                 object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, POSITIVE_CORRELATION, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-    def add_negative_correlation(self, u, v, evidence, citation, *, annotations=None, subject_modifier=None,
-                                 object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, NEGATIVE_CORRELATION, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-
-example_graph = _BELGraph()
+example_graph = BELGraph()
 
 example_graph.namespace_url['HGNC'] = ''
 example_graph.namespace_pattern['DBSNP'] = '^rs\d+$'

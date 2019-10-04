@@ -15,4 +15,4 @@ VERSION = '0.1.3-dev'
 NDEX_USERNAME = 'NDEX_USERNAME'
 
 #: The name of the environment variable to search or the NDEx password
-NDEX_PASSWORD = 'NDEX_PASSWORD'
+NDEX_PASSWORD = 'NDEX_PASSWORD'  # noqa: S105

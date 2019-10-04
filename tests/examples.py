@@ -3,57 +3,18 @@
 """Example BEL graphs for testing PyBEL-CX."""
 
 from pybel import BELGraph
-from pybel.constants import (
-    CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, DECREASES, DIRECTLY_INCREASES, HAS_VARIANT, INCREASES,
-    NEGATIVE_CORRELATION, POSITIVE_CORRELATION,
-)
+from pybel.constants import CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, HAS_VARIANT
 from pybel.dsl import (
     abundance, activity, bioprocess, complex_abundance, gene, gmod, named_complex_abundance, pathology, pmod, protein,
     protein_fusion, protein_substitution, reaction, rna,
 )
 
-
-class _BELGraph(BELGraph):
-    def add_increases(self, u, v, citation, evidence, annotations=None, subject_modifier=None, object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, INCREASES, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-    def add_directly_increases(self, u, v, citation, evidence, *, annotations=None, subject_modifier=None,
-                               object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, DIRECTLY_INCREASES, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-    def add_decreases(self, u, v, citation, evidence, annotations=None, subject_modifier=None, object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, DECREASES, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-    def add_positive_correlation(self, u, v, evidence, citation, *, annotations=None, subject_modifier=None,
-                                 object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, POSITIVE_CORRELATION, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-    def add_negative_correlation(self, u, v, evidence, citation, *, annotations=None, subject_modifier=None,
-                                 object_modifier=None):
-        if not isinstance(evidence, str):
-            raise TypeError
-        return self.add_qualified_edge(u, v, NEGATIVE_CORRELATION, evidence, citation, annotations=annotations,
-                                       subject_modifier=subject_modifier, object_modifier=object_modifier)
-
-
-example_graph = _BELGraph()
+example_graph = BELGraph()
 
 example_graph.namespace_url['HGNC'] = ''
-example_graph.namespace_pattern['DBSNP'] = '^rs\d+$'
+example_graph.namespace_pattern['DBSNP'] = r'^rs\d+$'
 example_graph.annotation_url['Species'] = ''
-example_graph.annotation_pattern['Number'] = '^\d+$'
+example_graph.annotation_pattern['Number'] = r'^\d+$'
 example_graph.annotation_list['Confidence'] = {'High', 'Low'}
 
 ptk2 = protein(namespace='HGNC', name='PTK2', variants=[pmod('Ph', 'Tyr', 925)])
@@ -89,13 +50,16 @@ kin(p(HGNC:PTK2)) increases kin(p(HGNC:MAPK3))
 kin(p(HGNC:PTK2)) increases kin(complex(SCOMP:"p85/p110 PI3Kinase Complex"))
 """
 
-example_graph.add_increases(ptk2, mapk1, e1, c1, object_modifier=kinase_activity)
-example_graph.add_increases(ptk2_rgb2_sos1, ras_family, e1, c1, object_modifier=gtp_activity)
-example_graph.add_increases(ras_family, mapk1, e1, c1, subject_modifier=gtp_activity, object_modifier=kinase_activity)
-example_graph.add_increases(ptk2, ptk2_rgb2_sos1, e1, c1, subject_modifier=kinase_activity)
-example_graph.add_increases(ptk2, mapk1, e1, c1, subject_modifier=kinase_activity, object_modifier=kinase_activity)
-example_graph.add_increases(ptk2, mapk3, e1, c1, subject_modifier=kinase_activity, object_modifier=kinase_activity)
-example_graph.add_increases(ptk2, pi3k_complex, e1, c1, subject_modifier=kinase_activity,
+example_graph.add_increases(ptk2, mapk1, evidence=e1, citation=c1, object_modifier=kinase_activity)
+example_graph.add_increases(ptk2_rgb2_sos1, ras_family, evidence=e1, citation=c1, object_modifier=gtp_activity)
+example_graph.add_increases(ras_family, mapk1, evidence=e1, citation=c1, subject_modifier=gtp_activity,
+                            object_modifier=kinase_activity)
+example_graph.add_increases(ptk2, ptk2_rgb2_sos1, evidence=e1, citation=c1, subject_modifier=kinase_activity)
+example_graph.add_increases(ptk2, mapk1, evidence=e1, citation=c1, subject_modifier=kinase_activity,
+                            object_modifier=kinase_activity)
+example_graph.add_increases(ptk2, mapk3, evidence=e1, citation=c1, subject_modifier=kinase_activity,
+                            object_modifier=kinase_activity)
+example_graph.add_increases(ptk2, pi3k_complex, evidence=e1, citation=c1, subject_modifier=kinase_activity,
                             object_modifier=kinase_activity)
 
 """
@@ -122,10 +86,10 @@ mthfr_a1298c = protein('HGNC', 'MTHFR', variants=[protein_substitution('Glu', 42
 folic_acid = abundance('CHEBI', 'folic acid')
 alzheimer_disease = pathology('MESH', 'Alzheimer Disease')
 
-example_graph.add_decreases(mthfr_c677t, mthfr, c2, e2, object_modifier=activity())
-example_graph.add_decreases(mthfr_a1298c, mthfr, c2, e2, object_modifier=activity())
-example_graph.add_negative_correlation(mthfr_c677t, folic_acid, c2, e2)
-example_graph.add_positive_correlation(mthfr_c677t, alzheimer_disease, c2, e2)
+example_graph.add_decreases(mthfr_c677t, mthfr, citation=c2, evidence=e2, object_modifier=activity())
+example_graph.add_decreases(mthfr_a1298c, mthfr, citation=c2, evidence=e2, object_modifier=activity())
+example_graph.add_negative_correlation(mthfr_c677t, folic_acid, citation=c2, evidence=e2)
+example_graph.add_positive_correlation(mthfr_c677t, alzheimer_disease, citation=c2, evidence=e2)
 
 c3 = '17948130'
 e3 = 'A polymorphism in the NDUFB6 promoter region that creates a possible DNA methylation site (rs629566, A/G) was ' \
@@ -142,7 +106,8 @@ ndufb6_gene = gene('HGNC', 'NDUFB6')
 ndufb6_rna = rna('HGNC', 'NDUFB6')
 
 example_graph.add_unqualified_edge(ndufb6_gene, rs629566, HAS_VARIANT)
-example_graph.add_negative_correlation(rs629566, ndufb6_rna, c3, e3, annotations={'Confidence': 'Low', 'Number': '50'})
+example_graph.add_negative_correlation(rs629566, ndufb6_rna, citation=c3, evidence=e3,
+                                       annotations={'Confidence': 'Low', 'Number': '50'})
 
 """
 SET Evidence = "% Entrez Gene summary: Rat: SUMMARY: precursor protein of kinin which is found in plasma; cysteine protease inhibitor and a major acute phase reactant [RGD] OMIM summary: (summary is not available from this source) kininogens; Endogenous peptides present in most body fluids. Certain enzymes convert them to active kinins which are involved in inflammation, blood clotting, complement reactions, etc. Kininogens belong to the cystatin superfamily. They are cysteine proteinase inhibitors. High-molecular-weight kininogen (hmwk) is split by plasma kallikrein to produce bradykinin. Low-molecular-weight kininogen (lmwk) is split by tissue kallikrein to produce kallidin. kinins; Inflammatory mediators that cause dilation of blood vessels and altered vascular permeability.  Kinins are small peptides produced from kininogen by kallikrein and are broken down by kininases. Act on phospholipase and increase arachidonic acid release and thus prostaglandin (PGE2) production. bradykinin; Vasoactive nonapeptide (RPPGFSPFR) formed by action of proteases on kininogens. Very similar to kallidin (which has the same sequence but with an additional N terminal lysine). Bradykinin is a very potent vasodilator and increases permeability of post capillary venules, it acts on endothelial cells to activate phospholipase A2. It is also spasmogenic for some smooth muscle and will cause pain. kallidin; Decapeptide (lysyl bradykinin, amino acid sequence KRPPGFSPFR) produced in kidney. Like bradykinin, an inflammatory mediator (a kinin), causes dilation of renal blood vessels and increased water excretion."
@@ -169,9 +134,9 @@ kallidin = abundance('CHEBI', 'Kallidin')
 pla2_family = protein('SFAM', 'PLA2 Family')
 kng1_to_kallidin = reaction(reactants=[kng1], products=[kallidin])
 
-example_graph.add_increases(inflammatory_process, kng1_to_kallidin, c4, e4)
-example_graph.add_increases(kallidin, bdkrb1, c4, e4, object_modifier=catalytic_activity)
-example_graph.add_increases(bdkrb1, pla2_family, c4, e4, subject_modifier=catalytic_activity,
+example_graph.add_increases(inflammatory_process, kng1_to_kallidin, citation=c4, evidence=e4)
+example_graph.add_increases(kallidin, bdkrb1, citation=c4, evidence=e4, object_modifier=catalytic_activity)
+example_graph.add_increases(bdkrb1, pla2_family, citation=c4, evidence=e4, subject_modifier=catalytic_activity,
                             object_modifier=catalytic_activity)
 
 c5 = '10866298'
@@ -189,8 +154,8 @@ bcr_abl1_fus = protein_fusion(partner_5p=protein('HGNC', 'BCR'), partner_3p=prot
 crkl_ph = protein('HGNC', 'CRKL', variants=[pmod('Ph', 'Tyr')])
 gab2_ph = protein('HGNC', 'GAB2', variants=[pmod('Ph', 'Tyr')])
 
-example_graph.add_directly_increases(bcr_abl1_fus, crkl_ph, c5, e5,
+example_graph.add_directly_increases(bcr_abl1_fus, crkl_ph, citation=c5, evidence=e5,
                                      annotations={'Species': '9606', 'Confidence': 'High'},
                                      subject_modifier=kinase_activity)
-example_graph.add_directly_increases(bcr_abl1_fus, gab2_ph, c5, e5, annotations={'Species': '9606'},
+example_graph.add_directly_increases(bcr_abl1_fus, gab2_ph, citation=c5, evidence=e5, annotations={'Species': '9606'},
                                      subject_modifier=kinase_activity)

@@ -4,9 +4,10 @@
 
 import os
 import tempfile
-import unittest
 
+from pybel import BELGraph
 from pybel.examples import braf_graph, egf_graph, sialic_acid_graph, statin_graph
+
 from pybel_cx.cx import from_cx, from_cx_file, from_cx_jsons, to_cx, to_cx_file, to_cx_jsons
 from tests.cases import TestCase
 from tests.examples import example_graph
@@ -15,29 +16,20 @@ from tests.examples import example_graph
 class TestSchema1(TestCase):
     """Test mapping schema 1."""
 
-    def help_test_graph(self, graph):
-        """Help test a graph round trip through a JSON object.
-
-        :type graph: pybel.BELGraph
-        """
+    def help_test_graph(self, graph: BELGraph) -> None:
+        """Help test a graph round trip through a JSON object."""
         graph_cx = to_cx(graph)
         reconstituted = from_cx(graph_cx)
         self.assert_graph_equal(graph, reconstituted)
 
-    def help_test_jsons(self, graph):
-        """Help test a graph round trip through a JSON string.
-
-        :type graph: pybel.BELGraph
-        """
+    def help_test_jsons(self, graph: BELGraph) -> None:
+        """Help test a graph round trip through a JSON string."""
         graph_cx_str = to_cx_jsons(graph)
         reconstituted = from_cx_jsons(graph_cx_str)
         self.assert_graph_equal(graph, reconstituted)
 
-    def help_test_file(self, graph):
-        """Help test a graph round trip through a file.
-
-        :type graph: pybel.BELGraph
-        """
+    def help_test_file(self, graph: BELGraph) -> None:
+        """Help test a graph round trip through a file."""
         fd, path = tempfile.mkstemp()
 
         with open(path, 'w') as file:
@@ -78,7 +70,3 @@ class TestSchema1(TestCase):
     def test_example_file(self):
         """Test the round trip to a file with the example graph."""
         self.help_test_file(example_graph)
-
-
-if __name__ == '__main__':
-    unittest.main()

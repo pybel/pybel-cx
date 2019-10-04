@@ -18,7 +18,7 @@ import logging
 import time
 from collections import defaultdict
 from operator import methodcaller
-from typing import Dict, List, Mapping, TextIO
+from typing import Dict, List, Mapping, Optional, TextIO
 
 from pybel import BELGraph
 from pybel.constants import (
@@ -28,6 +28,7 @@ from pybel.constants import (
     REACTION, RELATION, SUBJECT, UNQUALIFIED_EDGES, VARIANTS,
 )
 from pybel.dsl import BaseEntity
+from pybel.tokens import parse_result_to_dsl
 from pybel.utils import expand_dict, flatten_dict
 
 __all__ = [
@@ -66,7 +67,7 @@ _p_dict = {
     'partner5p': PARTNER_5P,
     'partner3p': PARTNER_3P,
     'range5p': RANGE_5P,
-    'range3p': RANGE_3P
+    'range3p': RANGE_3P,
 }
 
 
@@ -127,7 +128,7 @@ def to_cx(graph: BELGraph) -> List[Dict]:
 
         node_entry_dict = {
             '@id': node_index,
-            'n': calculate_canonical_cx_identifier(node)
+            'n': calculate_canonical_cx_identifier(node),
         }
 
         if IDENTIFIER in node:
@@ -160,28 +161,28 @@ def to_cx(graph: BELGraph) -> List[Dict]:
                     node_attributes_entry.append({
                         'po': node_index,
                         'n': '{}_{}'.format(k, a),
-                        'v': b
+                        'v': b,
                     })
 
             elif k == NAME:
                 node_attributes_entry.append({
                     'po': node_index,
                     'n': CX_NODE_NAME,
-                    'v': v
+                    'v': v,
                 })
 
             elif k in {PRODUCTS, REACTANTS, MEMBERS}:
                 node_attributes_entry.append({
                     'po': node_index,
                     'n': k,
-                    'v': json.dumps(v)
+                    'v': json.dumps(v),
                 })
 
             else:
                 node_attributes_entry.append({
                     'po': node_index,
                     'n': k,
-                    'v': v
+                    'v': v,
                 })
 
     edges_entry = []
@@ -202,14 +203,14 @@ def to_cx(graph: BELGraph) -> List[Dict]:
             edge_attributes_entry.append({
                 'po': edge_index,
                 'n': EVIDENCE,
-                'v': d[EVIDENCE]
+                'v': d[EVIDENCE],
             })
 
             for k, v in d[CITATION].items():
                 edge_attributes_entry.append({
                     'po': edge_index,
                     'n': '{}_{}'.format(CITATION, k),
-                    'v': v
+                    'v': v,
                 })
 
         if ANNOTATIONS in d:
@@ -226,7 +227,7 @@ def to_cx(graph: BELGraph) -> List[Dict]:
                 edge_attributes_entry.append({
                     'po': edge_index,
                     'n': '{}_{}'.format(SUBJECT, k),
-                    'v': v
+                    'v': v,
                 })
 
         if OBJECT in d:
@@ -234,7 +235,7 @@ def to_cx(graph: BELGraph) -> List[Dict]:
                 edge_attributes_entry.append({
                     'po': edge_index,
                     'n': '{}_{}'.format(OBJECT, k),
-                    'v': v
+                    'v': v,
                 })
 
     context_legend = {}
@@ -258,16 +259,16 @@ def to_cx(graph: BELGraph) -> List[Dict]:
     for keyword, resource_type in context_legend.items():
         context_legend_entry.append({
             'k': keyword,
-            'v': resource_type
+            'v': resource_type,
         })
 
     annotation_list_keys_lookup = {keyword: i for i, keyword in enumerate(sorted(graph.annotation_list))}
     annotation_lists_entry = []
     for keyword, values in graph.annotation_list.items():
-        for values in values:
+        for v in values:
             annotation_lists_entry.append({
                 'k': annotation_list_keys_lookup[keyword],
-                'v': values
+                'v': v,
             })
 
     context_entry_dict = {}
@@ -282,12 +283,12 @@ def to_cx(graph: BELGraph) -> List[Dict]:
 
     network_attributes_entry = [{
         "n": NDEX_SOURCE_FORMAT,
-        "v": "PyBEL"
+        "v": "PyBEL",
     }]
     for k, v in graph.document.items():
         network_attributes_entry.append({
             'n': k,
-            'v': v
+            'v': v,
         })
 
     # Coalesce to cx
@@ -314,7 +315,7 @@ def to_cx(graph: BELGraph) -> List[Dict]:
             "lastUpdate": time.time(),
             "consistencyGroup": 1,
             "properties": [],
-            "version": "1.0"
+            "version": "1.0",
         }
 
         if key in {'citations', 'supports', 'nodes', 'edges'}:
@@ -328,7 +329,7 @@ def to_cx(graph: BELGraph) -> List[Dict]:
 
     for key, aspect in cx_pairs:
         cx.append({
-            key: aspect
+            key: aspect,
         })
 
     cx.append({"status": [{"error": "", "success": True}]})
@@ -336,12 +337,12 @@ def to_cx(graph: BELGraph) -> List[Dict]:
     return cx
 
 
-def to_cx_file(graph: BELGraph, file: TextIO, indent=2, **kwargs) -> None:
+def to_cx_file(graph: BELGraph, file: TextIO, indent: Optional[int] = 2, **kwargs) -> None:
     """Write a BEL graph to a JSON file in CX format.
 
-    :param pybel.BELGraph graph: A BEL graph
-    :param file file: A writable file or file-like
-    :param Optional[int] indent: How many spaces to use to pretty print. Change to None for no pretty printing
+    :param graph: A BEL graph
+    :param file: A writable file or file-like
+    :param indent: How many spaces to use to pretty print. Change to None for no pretty printing
 
     Example:
 
@@ -358,7 +359,6 @@ def to_cx_jsons(graph: BELGraph, **kwargs) -> str:
     """Dump a BEL graph as CX JSON to a string.
 
     :return: CX JSON string
-    :rtype: str
     """
     graph_cx_json_str = to_cx(graph)
     return json.dumps(graph_cx_json_str, **kwargs)
@@ -489,7 +489,8 @@ def from_cx(cx: List[Dict]) -> BELGraph:
         if CX_NODE_NAME in data:
             data[NAME] = data.pop(CX_NODE_NAME)
 
-        nid_node_tuple[nid] = graph.add_node_from_data(data)
+        _node = parse_result_to_dsl(data)
+        nid_node_tuple[nid] = graph.add_node_from_data(_node)
 
     edge_relation = {}
     eid_source_nid = {}

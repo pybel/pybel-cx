@@ -21,7 +21,6 @@ jobs:
     - stage: lint
       env: TOXENV=manifest
     - env: TOXENV=flake8
-    - env: TOXENV=xenon
     - env: TOXENV=pyroma
     - env: TOXENV=mypy
 

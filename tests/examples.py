@@ -3,9 +3,7 @@
 """Example BEL graphs for testing PyBEL-CX."""
 
 from pybel import BELGraph
-from pybel.constants import (
-    CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, HAS_VARIANT,
-)
+from pybel.constants import CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, HAS_VARIANT
 from pybel.dsl import (
     abundance, activity, bioprocess, complex_abundance, gene, gmod, named_complex_abundance, pathology, pmod, protein,
     protein_fusion, protein_substitution, reaction, rna,

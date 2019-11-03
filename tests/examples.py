@@ -3,29 +3,24 @@
 """Example BEL graphs for testing PyBEL-CX."""
 
 from pybel import BELGraph
-from pybel.constants import CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_OTHER, HAS_VARIANT
+from pybel.constants import CITATION_IDENTIFIER, CITATION_DB, CITATION_TYPE_OTHER, HAS_VARIANT
 from pybel.dsl import (
-    abundance, activity, bioprocess, complex_abundance, gene, gmod, named_complex_abundance, pathology, pmod, protein,
+    ComplexAbundance, Protein, abundance, activity, bioprocess, gene, gmod, named_complex_abundance, pathology, pmod,
     protein_fusion, protein_substitution, reaction, rna,
 )
 
+
 example_graph = BELGraph()
 
-example_graph.namespace_url['HGNC'] = ''
-example_graph.namespace_pattern['DBSNP'] = r'^rs\d+$'
-example_graph.annotation_url['Species'] = ''
-example_graph.annotation_pattern['Number'] = r'^\d+$'
-example_graph.annotation_list['Confidence'] = {'High', 'Low'}
+ptk2 = Protein(namespace='hgnc', name='PTK2', variants=pmod('Ph', 'Tyr', 925))
+mapk1 = Protein(namespace='hgnc', name='MAPK1')
+mapk3 = Protein(namespace='hgnc', name='MAPK3')
+grb2 = Protein(namespace='hgnc', name='GRB2')
+sos1 = Protein(namespace='hgnc', name='SOS1')
+ptk2_rgb2_sos1 = ComplexAbundance([mapk1, grb2, sos1])
 
-ptk2 = protein(namespace='HGNC', name='PTK2', variants=[pmod('Ph', 'Tyr', 925)])
-mapk1 = protein(namespace='HGNC', name='MAPK1')
-mapk3 = protein(namespace='HGNC', name='MAPK3')
-grb2 = protein(namespace='HGNC', name='GRB2')
-sos1 = protein(namespace='HGNC', name='SOS1')
-ptk2_rgb2_sos1 = complex_abundance([mapk1, grb2, sos1])
-
-ras_family = protein(namespace='SFAM', name='RAS Family')
-pi3k_complex = named_complex_abundance(namespace='SFAM', name='p85/p110 PI3Kinase Complex')
+ras_family = Protein(namespace='fplx', name='RAS')
+pi3k_complex = named_complex_abundance(namespace='fplx', name='p85/p110 PI3Kinase Complex')
 
 kinase_activity = activity('kin')
 catalytic_activity = activity('cat')
@@ -80,9 +75,9 @@ It has been shown that the MTHFR 677T allele is associated with increased total 
 the MTHFR 677C>T polymorphism as a candidate AD risk factor"
 e2 = str(hash(e2))
 
-mthfr = protein('HGNC', 'MTHFR')
-mthfr_c677t = protein('HGNC', 'MTHFR', variants=[protein_substitution('Ala', 222, 'Val')])
-mthfr_a1298c = protein('HGNC', 'MTHFR', variants=[protein_substitution('Glu', 429, 'Ala')])
+mthfr = Protein(namespace='hgnc', name='MTHFR')
+mthfr_c677t = Protein(namespace='hgnc', name='MTHFR', variants=[protein_substitution('Ala', 222, 'Val')])
+mthfr_a1298c = Protein(namespace='hgnc', name='MTHFR', variants=[protein_substitution('Glu', 429, 'Ala')])
 folic_acid = abundance('CHEBI', 'folic acid')
 alzheimer_disease = pathology('MESH', 'Alzheimer Disease')
 
@@ -121,17 +116,17 @@ cat(p(HGNC:BDKRB1)) increases cat(p(SFAM:"PLA2 Family"))
 """
 
 c4 = {
-    CITATION_TYPE: CITATION_TYPE_OTHER,
-    CITATION_REFERENCE: 'Genstruct Reference',
+    CITATION_DB: CITATION_TYPE_OTHER,
+    CITATION_IDENTIFIER: 'Genstruct Reference',
 }
 e4 = '% Entrez Gene summary: Rat: SUMMARY: precursor protein of kinin which is found in plasma; cysteine protease inhibitor and a major acute phase reactant [RGD] OMIM summary: (summary is not available from this source) kininogens; Endogenous peptides present in most body fluids. Certain enzymes convert them to active kinins which are involved in inflammation, blood clotting, complement reactions, etc. Kininogens belong to the cystatin superfamily. They are cysteine proteinase inhibitors. High-molecular-weight kininogen (hmwk) is split by plasma kallikrein to produce bradykinin. Low-molecular-weight kininogen (lmwk) is split by tissue kallikrein to produce kallidin. kinins; Inflammatory mediators that cause dilation of blood vessels and altered vascular permeability.  Kinins are small peptides produced from kininogen by kallikrein and are broken down by kininases. Act on phospholipase and increase arachidonic acid release and thus prostaglandin (PGE2) production. bradykinin; Vasoactive nonapeptide (RPPGFSPFR) formed by action of proteases on kininogens. Very similar to kallidin (which has the same sequence but with an additional N terminal lysine). Bradykinin is a very potent vasodilator and increases permeability of post capillary venules, it acts on endothelial cells to activate phospholipase A2. It is also spasmogenic for some smooth muscle and will cause pain. kallidin; Decapeptide (lysyl bradykinin, amino acid sequence KRPPGFSPFR) produced in kidney. Like bradykinin, an inflammatory mediator (a kinin), causes dilation of renal blood vessels and increased water excretion.'
 e4 = str(hash(e4))
 
-bdkrb1 = protein('HGNC', 'BDKRB1')
+bdkrb1 = Protein(namespace='hgnc', name='BDKRB1')
 inflammatory_process = bioprocess('GO', 'inflammatory process')
-kng1 = protein('HGNC', 'KNG1')
+kng1 = Protein(namespace='hgnc', name='KNG1')
 kallidin = abundance('CHEBI', 'Kallidin')
-pla2_family = protein('SFAM', 'PLA2 Family')
+pla2_family = Protein('SFAM', 'PLA2 Family')
 kng1_to_kallidin = reaction(reactants=[kng1], products=[kallidin])
 
 example_graph.add_increases(inflammatory_process, kng1_to_kallidin, citation=c4, evidence=e4)
@@ -150,9 +145,10 @@ kin(p(HGNC:BCR,fus(HGNC:ABL1))) directlyIncreases p(HGNC:CRKL,pmod(P,Y))
 kin(p(HGNC:BCR,fus(HGNC:ABL1))) directlyIncreases p(HGNC:GAB2,pmod(P,Y))
 """
 
-bcr_abl1_fus = protein_fusion(partner_5p=protein('HGNC', 'BCR'), partner_3p=protein('HGNC', 'ABL1'))
-crkl_ph = protein('HGNC', 'CRKL', variants=[pmod('Ph', 'Tyr')])
-gab2_ph = protein('HGNC', 'GAB2', variants=[pmod('Ph', 'Tyr')])
+bcr_abl1_fus = protein_fusion(partner_5p=Protein(namespace='hgnc', name='BCR'),
+                              partner_3p=Protein(namespace='hgnc', name='ABL1'))
+crkl_ph = Protein(namespace='hgnc', name='CRKL', variants=[pmod('Ph', 'Tyr')])
+gab2_ph = Protein(namespace='hgnc', name='GAB2', variants=[pmod('Ph', 'Tyr')])
 
 example_graph.add_directly_increases(bcr_abl1_fus, crkl_ph, citation=c5, evidence=e5,
                                      annotations={'Species': '9606', 'Confidence': 'High'},

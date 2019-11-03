@@ -52,18 +52,16 @@ BEL to CX
 
 """
 
-from .cx import from_cx, from_cx_file, from_cx_jsons, to_cx, to_cx_file, to_cx_jsons
+from pybel.io.cx import from_cx, from_cx_file, to_cx, to_cx_file
 from .ndex_utils import from_ndex, to_ndex
 from .utils import get_version
 
 __all__ = [
     'from_cx',
     'from_cx_file',
-    'from_cx_jsons',
     'from_ndex',
     'get_version',
     'to_cx',
     'to_cx_file',
-    'to_cx_jsons',
     'to_ndex',
 ]

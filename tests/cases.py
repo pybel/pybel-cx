@@ -8,7 +8,7 @@ from typing import Mapping, Tuple
 
 from pybel import BELGraph, BaseEntity
 from pybel.constants import (
-    ANNOTATIONS, CITATION, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, OBJECT, RELATION,
+    ANNOTATIONS, CITATION, CITATION_IDENTIFIER, CITATION_DB, EVIDENCE, OBJECT, RELATION,
     SUBJECT,
 )
 from pybel.typing import EdgeData
@@ -27,7 +27,7 @@ def _edge_to_tuple(u: BaseEntity, v: BaseEntity, edge_data: EdgeData):
     if citation is None:
         citation_hashable = None
     else:
-        citation_hashable = (citation[CITATION_TYPE], citation[CITATION_REFERENCE])
+        citation_hashable = (citation[CITATION_DB], citation[CITATION_IDENTIFIER])
 
     evidence_hashable = edge_data.get(EVIDENCE)
 

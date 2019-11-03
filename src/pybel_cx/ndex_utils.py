@@ -17,14 +17,14 @@ from ndex2.client import Ndex2
 from requests.compat import urlsplit
 
 from .constants import NDEX_PASSWORD, NDEX_USERNAME
-from .cx import from_cx, to_cx
+from pybel.io.cx import from_cx, to_cx
 
 __all__ = [
     'to_ndex',
     'from_ndex',
 ]
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def build_ndex_client(username=None, password=None, debug=False):
@@ -41,11 +41,11 @@ def build_ndex_client(username=None, password=None, debug=False):
     """
     if username is None and NDEX_USERNAME in os.environ:
         username = os.environ[NDEX_USERNAME]
-        log.info('got NDEx username from environment: %s', username)
+        logger.info('got NDEx username from environment: %s', username)
 
     if password is None and NDEX_PASSWORD in os.environ:
         password = os.environ[NDEX_PASSWORD]
-        log.info('got NDEx password from environment')
+        logger.info('got NDEx password from environment')
 
     return Ndex2(username=username, password=password, debug=debug)
 
